@@ -1,0 +1,1 @@
+sam build && sam deploy

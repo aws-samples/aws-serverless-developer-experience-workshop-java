@@ -1,0 +1,11 @@
+unicorn_properties/samconfig.toml
+unicorn_properties/PropertyFunctions/target/*
+unicorn_contracts/samconfig.toml
+unicorn_contracts/ContractsFunction/target/**
+unicorn_web/samconfig.toml
+unicorn_web/PropertyFunctions/target/**
+**/.aws-sam/
+.DS_Store**
+.vscode/settings.json
+buildall.sh
+deleteall.sh
