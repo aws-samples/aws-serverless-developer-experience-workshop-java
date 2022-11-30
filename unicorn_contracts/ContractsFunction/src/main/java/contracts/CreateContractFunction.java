@@ -118,7 +118,9 @@ public class CreateContractFunction
 
         @Tracing
         private void createContract(Contract contract) throws JsonProcessingException {
-                helper.saveContractDDB(contract);
+                DynamoDbAsyncTable<Contract> contractTable = enhancedClient.table(this.tableName,
+                                TableSchema.fromBean(Contract.class));
+                contractTable.putItem(contract).join();
         }
 
         public ContractHelper getHelper() {
