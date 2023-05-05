@@ -17,7 +17,7 @@ Please leave checklist items unchecked if they do not apply to your change.
 * [ ] I have performed a self-review of this change
 * [ ] Changes have been tested
 * [ ] Changes are documented
-* [ ] PR title follows [conventional commit semantics](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-dotnet/blob/develop/.github/semantic.yml)
+* [ ] PR title follows [conventional commit semantics](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-java/blob/develop/.github/semantic.yml)
 
 ## Acknowledgment
 
