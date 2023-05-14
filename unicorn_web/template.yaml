@@ -54,7 +54,7 @@ Mappings:
 ######################################
 Globals:
   Function:
-    Runtime: java11
+    Runtime: java17
     Tracing: Active
     Timeout: 15
     MemorySize: 512
