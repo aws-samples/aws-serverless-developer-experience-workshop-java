@@ -18,6 +18,9 @@ jobs:
       contents: read
       security-events: write
 
+    - uses: actions/setup-java@v1
+        with:
+          java-version: 17
     strategy:
       fail-fast: false
       matrix:
