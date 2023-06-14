@@ -52,7 +52,9 @@ public class ContractStatusChangedHandlerFunction {
                 AWSEvent<ContractStatusChanged> event = Marshaller.unmarshalEvent(inputStream,
                                 ContractStatusChanged.class);
                 // save to database
-                saveContractStatus(event.getDetail());
+                ContractStatusChanged contractStatusChanged = event.getDetail();
+                saveContractStatus(contractStatusChanged.getPropertyId(),contractStatusChanged.getContractStatus(),
+                        contractStatusChanged.getContractId(),contractStatusChanged.getContractLastModifiedOn());
 
                 OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
                 writer.write(objectMapper.writeValueAsString(event.getDetail()));
@@ -60,9 +62,11 @@ public class ContractStatusChangedHandlerFunction {
         }
 
         @Tracing
-        void saveContractStatus(ContractStatusChanged event) {
-                helper.saveContractStatus(event);
+        void saveContractStatus(String propertyId,
+                                String contractStatus,String contractId, Long  contractLastModifiedOn) {
+                helper.saveContractStatus(propertyId,contractStatus,contractId,contractLastModifiedOn);
         }
+
 
         public void setHelper(PropertyHelper helper) {
                 this.helper = helper;
