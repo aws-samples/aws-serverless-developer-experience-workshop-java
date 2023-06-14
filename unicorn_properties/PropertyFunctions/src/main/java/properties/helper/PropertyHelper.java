@@ -3,7 +3,7 @@ package properties.helper;
 import java.util.HashMap;
 import java.util.Map;
 
-import schema.unicorn_contracts.contractstatuschanged.ContractStatusChanged;
+
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -24,30 +24,31 @@ public class PropertyHelper {
                 this.tableName = tableName;
         }
 
-        public void saveContractStatus(
-                        ContractStatusChanged contractStatusChanged) {
+        public void saveContractStatus(String propertyId,
+                                       String contractStatus,String contractId, Long  contractLastModifiedOn) {
 
                 Map<String, AttributeValue> key = new HashMap<String, AttributeValue>();
-                AttributeValue keyvalue = AttributeValue.fromS(contractStatusChanged.getPropertyId());
+                AttributeValue keyvalue = AttributeValue.fromS(propertyId);
                 key.put("property_id", keyvalue);
 
                 Map<String, AttributeValue> expressionAttributeValues = new HashMap<String, AttributeValue>();
-                expressionAttributeValues.put(":t", AttributeValue.fromS(contractStatusChanged.getContractStatus()));
-                expressionAttributeValues.put(":c", AttributeValue.fromS(contractStatusChanged.getContractId()));
+                expressionAttributeValues.put(":t", AttributeValue.fromS(contractStatus));
+                expressionAttributeValues.put(":c", AttributeValue.fromS(contractId));
                 expressionAttributeValues.put(":m", AttributeValue
-                                .fromN(String.valueOf(contractStatusChanged.getContractLastModifiedOn())));
+                        .fromN(String.valueOf(contractLastModifiedOn)));
 
                 UpdateItemRequest updateItemRequest = UpdateItemRequest.builder()
-                                .key(key)
-                                .tableName(this.tableName)
-                                .updateExpression(
-                                                "set contract_status=:t, contract_last_modified_on=:m, contract_id=:c")
-                                .expressionAttributeValues(expressionAttributeValues)
-                                .build();
+                        .key(key)
+                        .tableName(this.tableName)
+                        .updateExpression(
+                                "set contract_status=:t, contract_last_modified_on=:m, contract_id=:c")
+                        .expressionAttributeValues(expressionAttributeValues)
+                        .build();
 
                 dynamodbClient.updateItem(updateItemRequest).join();
 
         }
+
 
         public Map<String, AttributeValue> getContractStatus(String property_id) {
                 HashMap<String, AttributeValue> keyToGet = new HashMap<String, AttributeValue>();
