@@ -117,7 +117,7 @@ public class CreateContractFunction
 
         @Tracing
         private void createContract(Contract contract) throws JsonProcessingException {
-                helper.saveContractDDB(contract);
+                helper.createContract(contract);
         }
 
         public ContractHelper getHelper() {
