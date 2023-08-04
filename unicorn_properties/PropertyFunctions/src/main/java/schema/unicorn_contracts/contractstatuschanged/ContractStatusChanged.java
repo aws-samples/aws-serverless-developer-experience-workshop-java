@@ -1,9 +1,10 @@
 package schema.unicorn_contracts.contractstatuschanged;
 
-import java.io.Serializable;
 import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import java.io.Serializable;
 
 public class ContractStatusChanged implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -24,6 +25,7 @@ public class ContractStatusChanged implements Serializable {
     this.contractId = contractId;
     return this;
   }
+  
 
   public String getContractId() {
     return contractId;
@@ -37,6 +39,7 @@ public class ContractStatusChanged implements Serializable {
     this.contractLastModifiedOn = contractLastModifiedOn;
     return this;
   }
+  
 
   public Long getContractLastModifiedOn() {
     return contractLastModifiedOn;
@@ -50,6 +53,7 @@ public class ContractStatusChanged implements Serializable {
     this.contractStatus = contractStatus;
     return this;
   }
+  
 
   public String getContractStatus() {
     return contractStatus;
@@ -63,6 +67,7 @@ public class ContractStatusChanged implements Serializable {
     this.propertyId = propertyId;
     return this;
   }
+  
 
   public String getPropertyId() {
     return propertyId;
@@ -92,11 +97,12 @@ public class ContractStatusChanged implements Serializable {
     return java.util.Objects.hash(contractId, contractLastModifiedOn, contractStatus, propertyId);
   }
 
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ContractStatusChanged {\n");
-
+    
     sb.append("    contractId: ").append(toIndentedString(contractId)).append("\n");
     sb.append("    contractLastModifiedOn: ").append(toIndentedString(contractLastModifiedOn)).append("\n");
     sb.append("    contractStatus: ").append(toIndentedString(contractStatus)).append("\n");
