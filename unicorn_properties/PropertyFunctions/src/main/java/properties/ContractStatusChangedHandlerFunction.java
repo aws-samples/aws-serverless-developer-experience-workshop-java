@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import properties.helper.PropertyHelper;
-import schema.unicorn_contracts.contractstatuschanged.AWSEvent;
+import schema.unicorn_contracts.contractstatuschanged.Event;
 import schema.unicorn_contracts.contractstatuschanged.ContractStatusChanged;
 import schema.unicorn_contracts.contractstatuschanged.marshaller.Marshaller;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -48,9 +48,9 @@ public class ContractStatusChangedHandlerFunction {
                         Context context) throws IOException {
 
                 // deseralised and save contract status change in dynamodb table
-                // String strInput = new String(inputStream.readAllBytes());
-                AWSEvent<ContractStatusChanged> event = Marshaller.unmarshalEvent(inputStream,
-                                ContractStatusChanged.class);
+
+                Event event = Marshaller.unmarshal(inputStream,
+                        Event.class);
                 // save to database
                 ContractStatusChanged contractStatusChanged = event.getDetail();
                 saveContractStatus(contractStatusChanged.getPropertyId(),contractStatusChanged.getContractStatus(),

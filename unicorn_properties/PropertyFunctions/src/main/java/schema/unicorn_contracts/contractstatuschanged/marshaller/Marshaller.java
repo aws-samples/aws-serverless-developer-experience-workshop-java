@@ -3,7 +3,6 @@ package schema.unicorn_contracts.contractstatuschanged.marshaller;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import schema.unicorn_contracts.contractstatuschanged.AWSEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,11 +18,6 @@ public class Marshaller {
 
   public static <T> T unmarshal(InputStream input, Class<T> type) throws IOException {
     return MAPPER.readValue(input, type);
-  }
-
-  public static <T> AWSEvent<T> unmarshalEvent(InputStream input, Class<T> type) throws IOException {
-    final TypeFactory typeFactory = MAPPER.getTypeFactory();
-    return MAPPER.readValue(input, typeFactory.constructParametricType(AWSEvent.class, type));
   }
 
   private static ObjectMapper createObjectMapper() {
