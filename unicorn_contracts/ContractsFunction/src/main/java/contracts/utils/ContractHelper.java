@@ -149,7 +149,7 @@ public class ContractHelper {
                 return event_string;
         }
 
-        public void saveContractDDB(Contract contract) {
+        public void createContract(Contract contract) {
 
                 DynamoDbAsyncTable<Contract> contractTable = enhancedClient.table(this.tableName,
                         TableSchema.fromBean(Contract.class));
