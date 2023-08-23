@@ -98,7 +98,7 @@ public class ContractHelper {
 
                 HashMap<String, AttributeValue> itemKey = new HashMap<>();
 
-                itemKey.put("property_id", AttributeValue.builder().s(keyVal).build());
+                itemKey.put("PropertyId", AttributeValue.builder().s(keyVal).build());
 
                 HashMap<String, AttributeValueUpdate> updatedValues = new HashMap<>();
 
@@ -119,8 +119,7 @@ public class ContractHelper {
                                 .attributeUpdates(updatedValues)
                                 .build();
 
-                dynamodbClient.updateItem(request);
-
+                dynamodbClient.updateItem(request).join();
         }
 
         public String sendEvent(String propertyId, String contractId, ContractStatusEnum status, String EVENT_BUS,

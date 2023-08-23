@@ -33,7 +33,7 @@ public class Contract {
     }
 
     @DynamoDbPartitionKey
-    @DynamoDbAttribute("property_id")
+    @DynamoDbAttribute("PropertyId")
     public String getPropertyId() {
         return this.propertyId;
     }
