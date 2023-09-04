@@ -14,11 +14,8 @@ import contracts.utils.ContractStatusEnum;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeAction;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValueUpdate;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
@@ -38,10 +35,7 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
     private static String DDB_TABLE = System.getenv("DYNAMODB_TABLE");
     ObjectMapper objectMapper = new ObjectMapper();
 
-    DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
-            .httpClientBuilder(NettyNioAsyncHttpClient.builder()
-                    .maxConcurrency(100)
-                    .maxPendingConnectionAcquires(10_000))
+    DynamoDbClient dynamodbClient = DynamoDbClient.builder()
             .build();
 
     Logger logger = LogManager.getLogger();
@@ -109,7 +103,7 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
                 .expressionAttributeValues(expressionValues)
                 .build();
         try {
-            dynamodbClient.putItem(putItemRequest).join();
+            dynamodbClient.putItem(putItemRequest);
         } catch (ConditionalCheckFailedException conditionalCheckFailedException) {
             logger.error("Unable to create contract for Property '" + contract.getPropertyId()
                     + "'.There already is a contract for this property in status " + ContractStatusEnum.DRAFT + " or "
@@ -124,32 +118,22 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
         HashMap<String, AttributeValue> itemKey = new HashMap<>();
 
         itemKey.put("property_id", AttributeValue.builder().s(contract.getPropertyId()).build());
-        Map<String, AttributeValue> expressionValues = new HashMap<>();
-        expressionValues.put(":draft", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build());
 
-        HashMap<String, AttributeValueUpdate> updatedValues = new HashMap<>();
-
-        // Update the column specified by name with updatedVal
-        updatedValues.put("contract_status", AttributeValueUpdate.builder()
-                .value(AttributeValue.builder().s(ContractStatusEnum.APPROVED.toString()).build())
-                .action(AttributeAction.PUT)
-                .build());
-
-        updatedValues.put("modified_date", AttributeValueUpdate.builder()
-                .value(AttributeValue.builder().s(String.valueOf(new Date().getTime())).build())
-                .action(AttributeAction.PUT)
-                .build());
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":draft", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build());
+        expressionAttributeValues.put(":t", AttributeValue.builder().s(ContractStatusEnum.APPROVED.name()).build());
+        expressionAttributeValues.put(":m", AttributeValue.builder().s(String.valueOf(new Date().getTime())).build());
 
         UpdateItemRequest request = UpdateItemRequest.builder()
                 .tableName(DDB_TABLE)
                 .key(itemKey)
-                .attributeUpdates(updatedValues)
+                .updateExpression("set contract_status=:t, modified_date=:m")
+                .expressionAttributeValues(expressionAttributeValues)
                 .conditionExpression(
-                        "attribute_not_exists(property_id) AND contract_status IN (:draft)")
-                .expressionAttributeValues(expressionValues)
+                        "attribute_exists(property_id) AND contract_status IN (:draft)")
                 .build();
         try {
-            dynamodbClient.updateItem(request).join();
+            dynamodbClient.updateItem(request);
         } catch (ConditionalCheckFailedException conditionalCheckFailedException) {
             logger.error("Unable to update contract for Property '" + contract.getPropertyId()
                     + "'.Status is not in " + ContractStatusEnum.DRAFT);
@@ -159,7 +143,7 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
         }
     }
 
-    public void setDynamodbClient(DynamoDbAsyncClient dynamodbClient) {
+    public void setDynamodbClient(DynamoDbClient dynamodbClient) {
         this.dynamodbClient = dynamodbClient;
     }
 
