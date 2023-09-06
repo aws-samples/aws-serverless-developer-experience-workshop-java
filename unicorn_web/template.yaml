@@ -63,7 +63,7 @@ Globals:
         DYNAMODB_TABLE: !Ref WebTable
         EVENT_BUS: !Ref UnicornWebEventBus
         SERVICE_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]
-
+        POWERTOOLS_LOGGER_CASE: PascalCase
         POWERTOOLS_SERVICE_NAME: !FindInMap [Constants, ServiceNamespace, Value]
         POWERTOOLS_TRACE_DISABLED: "false" # Explicitly disables tracing, default
         POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"] # Logs incoming event, default
@@ -133,6 +133,8 @@ Resources:
             EventBusName: !Ref UnicornWebEventBus
         - DynamoDBReadPolicy:
             TableName: !Ref WebTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref WebTable
       Events:
         IngestQueue:
           Type: SQS
@@ -160,7 +162,7 @@ Resources:
       CodeUri: PropertyFunctions
       Handler: property.requestapproval.PublicationApprovedFunction::handleRequest
       Policies:
-        - DynamoDBReadPolicy:
+        - DynamoDBWritePolicy:
             TableName: !Ref WebTable
       Events:
         ApprovalEvent:
@@ -402,10 +404,7 @@ Resources:
         - "/aws/events/${Stage}/${NS}-catchall"
         - Stage: !Ref Stage
           NS: !FindInMap [Constants, ServiceNamespace, Value]
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   # Permissions to allow EventBridge to send logs to CloudWatch
   EventBridgeCloudWatchLogGroupPolicy:
@@ -475,7 +474,7 @@ Outputs:
   RequestApprovalFunctionArn:
     Description: Approval function ARN
     Value: !GetAtt RequestApprovalFunction.Arn
-  PublicationApprovedEventHandleFunctionArn:
+  PublicationApprovedEventHandlerFunctionArn:
     Description: Publication evaluation event handler function ARN
     Value: !GetAtt PublicationApprovedEventHandlerFunction.Arn
 
