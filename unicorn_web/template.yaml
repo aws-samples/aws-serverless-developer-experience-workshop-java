@@ -1,7 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 AWSTemplateFormatVersion: 2010-09-09
-Transform: 
+Transform:
   - AWS::LanguageExtensions
   - AWS::Serverless-2016-10-31
 Description: >
@@ -68,7 +68,8 @@ Globals:
         POWERTOOLS_TRACE_DISABLED: "false" # Explicitly disables tracing, default
         POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"] # Logs incoming event, default
         POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"] # Debug log sampling percentage, default
-        POWERTOOLS_METRICS_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]
+        POWERTOOLS_METRICS_NAMESPACE:
+          !FindInMap [Constants, ServiceNamespace, Value]
         POWERTOOLS_LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
     Tags:
       stage: !Ref Stage
@@ -132,8 +133,6 @@ Resources:
             EventBusName: !Ref UnicornWebEventBus
         - DynamoDBReadPolicy:
             TableName: !Ref WebTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref WebTable
       Events:
         IngestQueue:
           Type: SQS
@@ -155,15 +154,13 @@ Resources:
         - !Ref Stage
         - Days
 
-  PublicationApprovedFunction:
+  PublicationApprovedEventHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: PropertyFunctions
       Handler: property.requestapproval.PublicationApprovedFunction::handleRequest
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref WebTable
-        - DynamoDBWritePolicy:
             TableName: !Ref WebTable
       Events:
         ApprovalEvent:
@@ -182,12 +179,12 @@ Resources:
             DeadLetterConfig:
               Arn: !GetAtt UnicornWebEventBusDLQ.Arn
 
-  PublicationApprovedFunctionLogGroup:
+  PublicationApprovedEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${PublicationApprovedFunction}"
+      LogGroupName: !Sub "/aws/lambda/${PublicationApprovedEventHandlerFunction}"
       RetentionInDays: !FindInMap
         - LogsRetentionPeriodMap
         - !Ref Stage
@@ -478,9 +475,9 @@ Outputs:
   RequestApprovalFunctionArn:
     Description: Approval function ARN
     Value: !GetAtt RequestApprovalFunction.Arn
-  PublicationApprovedFunctionArn:
+  PublicationApprovedEventHandleFunctionArn:
     Description: Publication evaluation event handler function ARN
-    Value: !GetAtt PublicationApprovedFunction.Arn
+    Value: !GetAtt PublicationApprovedEventHandlerFunction.Arn
 
   IsProd:
     Description: Is Production?
