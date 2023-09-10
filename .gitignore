@@ -9,3 +9,8 @@ unicorn_web/PropertyFunctions/target/**
 .vscode/settings.json
 buildall.sh
 deleteall.sh
+/.idea/**
+/cloudapp.iml
+/unicorn_properties/PropertyFunctions/PropertyService.iml
+/unicorn_web/PropertyFunctions/PropertyWeb.iml
+/unicorn_contracts/ContractsFunction/ContractsModule.iml

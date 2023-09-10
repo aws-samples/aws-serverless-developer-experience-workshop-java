@@ -55,7 +55,7 @@ Conditions:
 ######################################
 Globals:
   Function:
-    Runtime: java11
+    Runtime: java17
     MemorySize: 512
     Timeout: 15
     Tracing: Active
@@ -185,6 +185,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
+      SqsManagedSseEnabled: true
       MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
       Tags:
         - Key: project
@@ -199,6 +200,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
+      SqsManagedSseEnabled: true
       MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
       Tags:
         - Key: project

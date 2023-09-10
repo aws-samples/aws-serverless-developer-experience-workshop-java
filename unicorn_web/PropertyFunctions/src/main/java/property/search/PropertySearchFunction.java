@@ -104,7 +104,6 @@ public class PropertySearchFunction
             case "/search/{country}/{city}/{street}":
                 // code to call
                 logger.info("path is " + requestPath);
-                logger.info("path is " + requestPath);
                 strSortKey = input.getPathParameters().get("street");
                 strSortKey = strSortKey.replace(' ', '-').toLowerCase();
 
@@ -119,7 +118,6 @@ public class PropertySearchFunction
                 }
                 break;
             case "/properties/{country}/{city}/{street}/{number}":
-                logger.info("path is " + requestPath);
                 logger.info("path is " + requestPath);
                 strSortKey = input.getPathParameters().get("street") + "#" + input.getPathParameters().get("number");
                 strSortKey = strSortKey.replace(' ', '-').toLowerCase();

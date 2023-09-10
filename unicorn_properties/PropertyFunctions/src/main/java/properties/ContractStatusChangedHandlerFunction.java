@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import properties.helper.PropertyHelper;
-import schema.unicorn_contracts.contractstatuschanged.AWSEvent;
+import schema.unicorn_contracts.contractstatuschanged.Event;
 import schema.unicorn_contracts.contractstatuschanged.ContractStatusChanged;
 import schema.unicorn_contracts.contractstatuschanged.marshaller.Marshaller;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -48,11 +48,13 @@ public class ContractStatusChangedHandlerFunction {
                         Context context) throws IOException {
 
                 // deseralised and save contract status change in dynamodb table
-                // String strInput = new String(inputStream.readAllBytes());
-                AWSEvent<ContractStatusChanged> event = Marshaller.unmarshalEvent(inputStream,
-                                ContractStatusChanged.class);
+
+                Event event = Marshaller.unmarshal(inputStream,
+                        Event.class);
                 // save to database
-                saveContractStatus(event.getDetail());
+                ContractStatusChanged contractStatusChanged = event.getDetail();
+                saveContractStatus(contractStatusChanged.getPropertyId(),contractStatusChanged.getContractStatus(),
+                        contractStatusChanged.getContractId(),contractStatusChanged.getContractLastModifiedOn());
 
                 OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
                 writer.write(objectMapper.writeValueAsString(event.getDetail()));
@@ -60,9 +62,11 @@ public class ContractStatusChangedHandlerFunction {
         }
 
         @Tracing
-        void saveContractStatus(ContractStatusChanged event) {
-                helper.saveContractStatus(event);
+        void saveContractStatus(String propertyId,
+                                String contractStatus,String contractId, Long  contractLastModifiedOn) {
+                helper.saveContractStatus(propertyId,contractStatus,contractId,contractLastModifiedOn);
         }
+
 
         public void setHelper(PropertyHelper helper) {
                 this.helper = helper;

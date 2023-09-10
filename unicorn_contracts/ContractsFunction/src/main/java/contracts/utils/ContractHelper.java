@@ -73,9 +73,8 @@ public class ContractHelper {
                                 .expressionAttributeValues(attrValues)
                                 .build();
 
-                List<Map<String, AttributeValue>> queryResponse = dynamodbClient.query(queryReq).join().items();
+                return dynamodbClient.query(queryReq).join().items();
 
-                return queryResponse;
         }
 
         public String propertyExists(String key, String keyVal) {
@@ -97,11 +96,11 @@ public class ContractHelper {
         public void updateTableItem(
                         String keyVal) {
 
-                HashMap<String, AttributeValue> itemKey = new HashMap<String, AttributeValue>();
+                HashMap<String, AttributeValue> itemKey = new HashMap<>();
 
                 itemKey.put("property_id", AttributeValue.builder().s(keyVal).build());
 
-                HashMap<String, AttributeValueUpdate> updatedValues = new HashMap<String, AttributeValueUpdate>();
+                HashMap<String, AttributeValueUpdate> updatedValues = new HashMap<>();
 
                 // Update the column specified by name with updatedVal
                 updatedValues.put("contract_status", AttributeValueUpdate.builder()
@@ -136,7 +135,7 @@ public class ContractHelper {
 
                 String event_string = objectMapper.writeValueAsString(event);
 
-                List<PutEventsRequestEntry> requestEntries = new ArrayList<PutEventsRequestEntry>();
+                List<PutEventsRequestEntry> requestEntries = new ArrayList<>();
 
                 requestEntries.add(PutEventsRequestEntry.builder()
                                 .eventBusName(EVENT_BUS)
@@ -150,10 +149,10 @@ public class ContractHelper {
                 return event_string;
         }
 
-        public void saveContractDDB(Contract contract) {
+        public void createContract(Contract contract) {
 
                 DynamoDbAsyncTable<Contract> contractTable = enhancedClient.table(this.tableName,
-                                TableSchema.fromBean(Contract.class));
+                        TableSchema.fromBean(Contract.class));
                 contractTable.putItem(contract).join();
 
         }

@@ -56,7 +56,7 @@ Globals:
   Api:
     OpenApiVersion: 3.0.1
   Function:
-    Runtime: java11
+    Runtime: java17
     MemorySize: 512
     Timeout: 900
     Tracing: Active
@@ -73,7 +73,6 @@ Globals:
         POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"]                                           # Debug log sampling percentage, default
         POWERTOOLS_METRICS_NAMESPACE: !Sub '{{resolve:ssm:/UniProp/${Stage}/UnicornContractsNamespace}}'  # Metric Namespace
         LOG_LEVEL: INFO                                                                                   # Log level for Logger (INFO, DEBUG, etc.), default
-        JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1                                 # More info about tiered compilation https://aws.amazon.com/blogs/compute/optimizing-aws-lambda-function-performance-for-java/
     Tags:
       stage: !Ref Stage
       project: AWS Serverless Developer Experience

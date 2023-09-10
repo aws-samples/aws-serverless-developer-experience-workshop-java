@@ -54,7 +54,7 @@ Mappings:
 ######################################
 Globals:
   Function:
-    Runtime: java11
+    Runtime: java17
     Tracing: Active
     Timeout: 15
     MemorySize: 512
@@ -66,9 +66,9 @@ Globals:
         EVENT_BUS: !Sub "{{resolve:ssm:/UniProp/${Stage}/EventBusName}}"
         SERVICE_NAMESPACE: !Sub "{{resolve:ssm:/UniProp/${Stage}/UnicornWebNamespace}}"
         POWERTOOLS_SERVICE_NAME: !Sub "{{resolve:ssm:/UniProp/${Stage}/UnicornWebNamespace}}"
-        POWERTOOLS_TRACE_DISABLED: "false"                                                            # Explicitly disables tracing, default
-        POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"]                                    # Logs incoming event, default
-        POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"]                                       # Debug log sampling percentage, default
+        POWERTOOLS_TRACE_DISABLED: "false"                                                        # Explicitly disables tracing, default
+        POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"]                                # Logs incoming event, default
+        POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"]                                   # Debug log sampling percentage, default
         POWERTOOLS_METRICS_NAMESPACE: !Sub "{{resolve:ssm:/UniProp/${Stage}/UnicornWebNamespace}}"
         LOG_LEVEL: INFO
     Tags:
@@ -139,6 +139,8 @@ Resources:
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref WebTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref WebTable
       Events:
         ApprovalEvent:
           Type: EventBridgeRule
@@ -164,6 +166,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
+      SqsManagedSseEnabled: true
       MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
       Tags:
         - Key: project
@@ -187,7 +190,7 @@ Resources:
         - MetricsEnabled: true
           ResourcePath: /*
           HttpMethod: '*'
-          LoggingLevel: !If 
+          LoggingLevel: !If
             - IsProd
             - ERROR
             - INFO
@@ -237,7 +240,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      RetentionInDays: !FindInMap 
+      RetentionInDays: !FindInMap
         - LogsRetentionPeriodMap
         - !Ref Stage
         - Days

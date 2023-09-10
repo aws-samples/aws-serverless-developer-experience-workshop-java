@@ -65,11 +65,10 @@ public class CreateContractFunction
                         contract = objectMapper.readValue(input.getBody(), Contract.class);
 
                         if (!validateEvent(contract)) {
-                                APIGatewayProxyResponseEvent errorResponse = response
+                                return response
                                                 .withBody("Invalid Body")
                                                 .withStatusCode(500);
 
-                                return errorResponse;
                         }
                         contract.setContractId(contractId);
                         contract.setContractLastModifiedOn(createDate);
@@ -118,7 +117,7 @@ public class CreateContractFunction
 
         @Tracing
         private void createContract(Contract contract) throws JsonProcessingException {
-                helper.saveContractDDB(contract);
+                helper.createContract(contract);
         }
 
         public ContractHelper getHelper() {
@@ -130,11 +129,9 @@ public class CreateContractFunction
         }
 
         public boolean validateEvent(Contract contract) {
-                if (contract.getAddress() == null || contract.getPropertyId() == null
-                                || contract.getSellerName() == null) {
-                        return false;
-                } else
-                        return true;
+                return !(contract.getAddress() == null || contract.getPropertyId() == null
+                                || contract.getSellerName() == null);
+
         }
 
 }

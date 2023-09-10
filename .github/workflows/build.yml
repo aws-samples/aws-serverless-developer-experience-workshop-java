@@ -1,0 +1,43 @@
+name: Build Java
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'unicorn_contracts/**'
+      - 'unicorn_properties/**'
+      - 'unicorn_web/**'
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'unicorn_contracts/**'
+      - 'unicorn_properties/**'
+      - 'unicorn_web/**'
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      max-parallel: 4
+      matrix:
+        # test against latest update of each major Java version, as well as specific updates of LTS versions:
+        java: [17]
+    name: Java ${{ matrix.java }}
+    env:
+      JAVA: ${{ matrix.java }}
+      AWS_REGION: us-west-2
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn compile test
