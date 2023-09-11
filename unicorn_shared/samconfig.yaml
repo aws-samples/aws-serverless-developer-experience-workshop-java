@@ -14,4 +14,4 @@ default:
       on_failure: ROLLBACK
       capabilities: CAPABILITY_IAM
       parameter_overrides:
-        - "Stage=local"
+        - "Stage=Local"

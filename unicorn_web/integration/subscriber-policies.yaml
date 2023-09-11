@@ -1,6 +1,6 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Description: |
   Defines the event bus policies that determine who can create rules on the event bus to
   subscribe to events published by Unicorn Web Service.
@@ -20,7 +20,7 @@ Resources:
     Type: AWS::Events::EventBusPolicy
     Properties:
       EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornWebEventBus}}"
-      StatementId: !Sub "${AWS::StackName}-CreateRule"
+      StatementId: !Sub "OnlyRulesForPropertiesServiceEvents-${Stage}"
       Statement:
         Effect: Allow
         Principal:
@@ -35,8 +35,8 @@ Resources:
           - events:RemoveTargets
         Resource:
           - !Sub
-            - arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${eventBusName}/*
-            - eventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornWebEventBus}}"
+              - arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${eventBusName}/*
+              - eventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornWebEventBus}}"
         Condition:
           StringEqualsIfExists:
             "events:creatorAccount": "${aws:PrincipalAccount}"

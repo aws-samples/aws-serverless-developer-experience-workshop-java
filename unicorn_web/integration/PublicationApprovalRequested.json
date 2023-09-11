@@ -100,7 +100,12 @@
       },
       "Address": {
         "type": "object",
-        "required": ["country", "number", "city", "street"],
+        "required": [
+          "country",
+          "number",
+          "city",
+          "street"
+        ],
         "properties": {
           "city": {
             "type": "string"
