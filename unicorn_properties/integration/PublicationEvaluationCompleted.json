@@ -58,7 +58,10 @@
       },
       "PublicationEvaluationCompleted": {
         "type": "object",
-        "required": ["property_id", "evaluation_result"],
+        "required": [
+          "property_id",
+          "evaluation_result"
+        ],
         "properties": {
           "property_id": {
             "type": "string"

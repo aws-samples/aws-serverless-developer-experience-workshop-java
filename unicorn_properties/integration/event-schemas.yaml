@@ -1,6 +1,6 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Description: Event Schemas for use by the Properties Service
 
 Parameters:
@@ -15,16 +15,16 @@ Parameters:
 Resources:
   EventRegistry:
     Type: AWS::EventSchemas::Registry
-    Properties:
-      Description: "Event schemas for Unicorn Properties"
+    Properties: 
+      Description: 'Event schemas for Unicorn Properties'
       RegistryName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesNamespace}}"
 
   EventRegistryPolicy:
     Type: AWS::EventSchemas::RegistryPolicy
-    Properties:
+    Properties: 
       RegistryName: !GetAtt EventRegistry.RegistryName
       Policy:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Sid: AllowExternalServices
             Effect: Allow
@@ -46,10 +46,10 @@ Resources:
   PublicationEvaluationCompleted:
     Type: AWS::EventSchemas::Schema
     Properties:
-      Type: "OpenApi3"
+      Type: 'OpenApi3'
       RegistryName: !GetAtt EventRegistry.RegistryName
-      SchemaName: !Sub "${EventRegistry.RegistryName}@PublicationEvaluationCompleted"
-      Description: "The schema for when a property evaluation is completed"
+      SchemaName: !Sub '${EventRegistry.RegistryName}@PublicationEvaluationCompleted'
+      Description: 'The schema for when a property evaluation is completed'
       Content: !Sub |
         {
           "openapi": "3.0.0",
