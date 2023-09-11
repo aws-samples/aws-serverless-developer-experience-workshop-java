@@ -32,6 +32,21 @@ default:
     parameters:
       warm_containers: EAGER
 
+schemas:
+  global:
+    parameters:
+      stack_name: uni-prop-local-web-schemas
+      s3_prefix: uni-prop-local-web-schemas
+      resolve_s3: true
+  deploy:
+    parameters:
+      template_file: integration/event-schemas.yaml
+      confirm_changeset: false
+      fail_on_empty_changeset: false
+      on_failure: ROLLBACK
+      parameter_overrides:
+        - "Stage=local"
+
 subscriber-policies:
   global:
     parameters:
@@ -63,4 +78,3 @@ subscriptions:
       capabilities: CAPABILITY_IAM
       parameter_overrides:
         - "Stage=local"
-        
