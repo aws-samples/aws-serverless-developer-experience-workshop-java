@@ -1,6 +1,6 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: |
   Defines the event bus policies that determine who can create rules on the event bus to
   subscribe to events published by Unicorn Contracts Service.
@@ -18,15 +18,15 @@ Resources:
   EventRegistry:
     Type: AWS::EventSchemas::Registry
     Properties:
-      Description: 'Event schemas for Unicorn Contracts'
+      Description: "Event schemas for Unicorn Contracts"
       RegistryName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsNamespace}}"
 
   EventRegistryPolicy:
     Type: AWS::EventSchemas::RegistryPolicy
-    Properties: 
+    Properties:
       RegistryName: !GetAtt EventRegistry.RegistryName
       Policy:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Sid: AllowExternalServices
             Effect: Allow
@@ -48,10 +48,10 @@ Resources:
   ContractApprovedEventSchema:
     Type: AWS::EventSchemas::Schema
     Properties:
-      Type: 'OpenApi3'
+      Type: "OpenApi3"
       RegistryName: !GetAtt EventRegistry.RegistryName
-      SchemaName: !Sub '${EventRegistry.RegistryName}@ContractStatusChanged'
-      Description: 'The schema for a request to publish a property'
+      SchemaName: !Sub "${EventRegistry.RegistryName}@ContractStatusChanged"
+      Description: "The schema for a request to publish a property"
       Content: !Sub |
         {
           "openapi": "3.0.0",
