@@ -465,8 +465,8 @@ Resources:
   # CloudFormation Stack with the Cross-service EventBus Rules for Properties Service
   SubscriptionsStack:
     Type: AWS::Serverless::Application
-    # DependsOn:
-      # - UnicornPropertiesEventBusArnParam
+    DependsOn:
+      - UnicornPropertiesEventBusArnParam
     Properties:
       Location: "integration/subscriptions.yaml"
       Parameters:
