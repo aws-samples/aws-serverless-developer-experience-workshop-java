@@ -51,7 +51,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 public class RequestApprovalFunction {
 
     Logger logger = LogManager.getLogger();
-    Set<String> noActionSet = new HashSet<String>(Arrays.asList("APPROVED", "DECLINED", "PENDING"));
+    Set<String> noActionSet = new HashSet<String>(Arrays.asList("APPROVED"));
     String SERVICE = "Unicorn.Web";
     String EXPRESSION = "[a-z-]+\\/[a-z-]+\\/[a-z][a-z0-9-]*\\/[0-9-]+";
     String TARGET_STATE = "PENDING";
@@ -121,8 +121,6 @@ public class RequestApprovalFunction {
                             .withStatusCode(200)
                             .withBody("'result': 'Property is already " + property.getStatus() + "; no action taken'");
                 }
-                property.setStatus(TARGET_STATE);
-                propertyTable.updateItem(property).join();
                 sendEvent(property);
 
             } catch (Exception e) {

@@ -1,8 +1,5 @@
 package contracts.utils;
 
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-
-@DynamoDbBean
 public class Address {
 
     String country;

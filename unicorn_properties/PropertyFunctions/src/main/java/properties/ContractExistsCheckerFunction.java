@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -14,9 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import properties.helper.PropertyHelper;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -34,7 +36,8 @@ public class ContractExistsCheckerFunction {
 
     final String TABLE_NAME = System.getenv("CONTRACT_STATUS_TABLE");
 
-    PropertyHelper helper = new PropertyHelper(TABLE_NAME);
+    DynamoDbClient dynamodbClient = DynamoDbClient.builder()
+            .build();
 
     @Tracing
     @Metrics(captureColdStart = true)
@@ -48,31 +51,37 @@ public class ContractExistsCheckerFunction {
 
         String property_id = rootNode.path("Input").get("property_id").asText();
 
-        try {
-
-            Map contractMap = getContractStatus(property_id);
-            if (getContractStatus(property_id).isEmpty()) {
-                throw new ContractStatusNotFoundException("Contract for property " + property_id + " not found");
-            } else {
-                String responseString = getContractStatus(property_id).toString();
-                OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-                writer.write(responseString);
-                writer.close();
-            }
-
-        } catch (DynamoDbException e) {
-            throw new ContractStatusNotFoundException(e.getLocalizedMessage());
+        Map<String, AttributeValue> contractMap = getContractStatus(property_id);
+        if (getContractStatus(property_id).isEmpty()) {
+            throw new ContractStatusNotFoundException("Contract for property " + property_id + " not found");
+        } else {
+            String responseString = getContractStatus(property_id).toString();
+            OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+            writer.write(responseString);
+            writer.close();
         }
 
     }
 
     @Tracing
-    Map getContractStatus(String property_id) {
-        return helper.getContractStatus(property_id);
+    Map<String, AttributeValue> getContractStatus(String property_id) throws ContractStatusNotFoundException {
+        Map<String, AttributeValue> keyToGet = new HashMap<String, AttributeValue>();
+        keyToGet.put("property_id", AttributeValue.builder()
+                .s(property_id).build());
+
+        GetItemRequest request = GetItemRequest.builder()
+                .key(keyToGet)
+                .tableName(TABLE_NAME)
+                .build();
+        try {
+            return dynamodbClient.getItem(request).item();
+        } catch (ResourceNotFoundException exception) {
+            throw new ContractStatusNotFoundException(exception.getMessage());
+        }
     }
 
-    public void setHelper(PropertyHelper helper) {
-        this.helper = helper;
+    public void setDynamodbClient(DynamoDbClient dynamodbClient) {
+        this.dynamodbClient = dynamodbClient;
     }
 
 }
