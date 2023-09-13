@@ -463,14 +463,14 @@ Resources:
         Stage: !Ref Stage
 
   # CloudFormation Stack with the Cross-service EventBus Rules for Properties Service
-  # SubscriptionsStack:
-  #   Type: AWS::Serverless::Application
-  #   # DependsOn:
-  #     # - UnicornPropertiesEventBusArnParam
-  #   Properties:
-  #     Location: "integration/subscriptions.yaml"
-  #     Parameters:
-  #       Stage: !Ref Stage
+  SubscriptionsStack:
+    Type: AWS::Serverless::Application
+    # DependsOn:
+      # - UnicornPropertiesEventBusArnParam
+    Properties:
+      Location: "integration/subscriptions.yaml"
+      Parameters:
+        Stage: !Ref Stage
 
 Outputs:
   #### DYNAMODB OUTPUTS
