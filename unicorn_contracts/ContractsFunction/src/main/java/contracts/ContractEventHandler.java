@@ -94,8 +94,16 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
                 AttributeValue.builder().n(createDate.toString()).build());
         itemValues.put("contract_id", AttributeValue.builder().s(contractId).build());
         itemValues.put("contract_status", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build());
+
+        HashMap<String, AttributeValue> address = new HashMap<>();
+        address.put("country", AttributeValue.builder().s(contract.getAddress().getCountry()).build());
+        address.put("city", AttributeValue.builder().s(contract.getAddress().getCity()).build());
+        address.put("street", AttributeValue.builder().s(contract.getAddress().getStreet()).build());
+        address.put("number",
+                AttributeValue.builder().n(Integer.valueOf(contract.getAddress().getNumber()).toString()).build());
+
         itemValues.put("address",
-                AttributeValue.builder().s(objectMapper.writeValueAsString(contract.getAddress())).build());
+                AttributeValue.builder().m(address).build());
         PutItemRequest putItemRequest = PutItemRequest.builder().tableName(DDB_TABLE)
                 .item(itemValues)
                 .conditionExpression(
