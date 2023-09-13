@@ -13,25 +13,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.amazonaws.services.lambda.runtime.Context;
+
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import properties.helper.PropertyHelper;
+import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ContractStatusTests {
 
   Context context;
+  DynamoDbClient client;
 
   ContractStatusChangedHandlerFunction contractStatusChangedHandler;
   ContractExistsCheckerFunction contractExistsChecker;
-
-  PropertyHelper helper;
 
   Map<String, AttributeValue> response = new HashMap<String, AttributeValue>();
 
@@ -39,6 +42,7 @@ public class ContractStatusTests {
   public void setUp() throws Exception {
 
     context = mock(Context.class);
+    client = mock(DynamoDbClient.class);
 
   }
 
@@ -48,8 +52,8 @@ public class ContractStatusTests {
     contractStatusChangedHandler = new ContractStatusChangedHandlerFunction();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     File resourceFile = new File("src/test/events/lambda/contract_status_changed.json");
-    helper = mock(PropertyHelper.class);
-    contractStatusChangedHandler.setHelper(helper);
+    client = mock(DynamoDbClient.class);
+    contractStatusChangedHandler.setDynamodbClient(client);
 
     FileInputStream fis = new FileInputStream(resourceFile);
 
@@ -64,11 +68,19 @@ public class ContractStatusTests {
   public void validContractCheckEvent() throws IOException, ContractStatusNotFoundException {
 
     contractExistsChecker = new ContractExistsCheckerFunction();
-    helper = mock(PropertyHelper.class);
+    client = mock(DynamoDbClient.class);
+    contractExistsChecker.setDynamodbClient(client);
     response.put("contract_id", AttributeValue.fromS("value1"));
-    Mockito.when(helper.getContractStatus(any())).thenReturn(response);
-    contractExistsChecker.setHelper(helper);
 
+    Answer<GetItemResponse> answer = new Answer<GetItemResponse>() {
+      @Override
+      public GetItemResponse answer(InvocationOnMock invocation) throws Throwable {
+        return GetItemResponse.builder().item(response).build();
+      }
+
+    };
+    Mockito.when(client.getItem((GetItemRequest) any()))
+        .thenAnswer(answer);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     File resourceFile = new File("src/test/events/lambda/contract_status_checker.json");
 

@@ -1,61 +1,25 @@
 {
-  "resource": "/contracts",
-  "path": "/contracts",
-  "httpMethod": "PUT",
-  "headers": {
-    "Accept": "*/*",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Content-Type": "application/json",
-    "Host": "k1zeivuzia.execute-api.ap-southeast-2.amazonaws.com",
-    "Postman-Token": "a9133765-9386-46c5-a78b-c6b56f89f507",
-    "User-Agent": "PostmanRuntime/7.29.0",
-    "X-Amzn-Trace-Id": "Root=1-62cfb741-3fa699ec12c65b080082cd24",
-    "X-Forwarded-For": "54.240.193.3",
-    "X-Forwarded-Port": "443",
-    "X-Forwarded-Proto": "https"
-  },
-  "multiValueHeaders": {
-    "Accept": ["*/*"],
-    "Accept-Encoding": ["gzip, deflate, br"],
-    "Content-Type": ["application/json"],
-    "Host": ["k1zeivuzia.execute-api.ap-southeast-2.amazonaws.com"],
-    "Postman-Token": ["a9133765-9386-46c5-a78b-c6b56f89f507"],
-    "User-Agent": ["PostmanRuntime/7.29.0"],
-    "X-Amzn-Trace-Id": ["Root=1-62cfb741-3fa699ec12c65b080082cd24"],
-    "X-Forwarded-For": ["54.240.193.3"],
-    "X-Forwarded-Port": ["443"],
-    "X-Forwarded-Proto": ["https"]
-  },
-  "requestContext": {
-    "resourceId": "ef5spq",
-    "resourcePath": "/contracts",
-    "httpMethod": "PUT",
-    "extendedRequestId": "VPmSUFCBywMFTXA=",
-    "requestTime": "14/Jul/2022:06:27:13 +0000",
-    "path": "/contracts/contracts",
-    "accountId": "xxxxxxxx",
-    "protocol": "HTTP/1.1",
-    "stage": "contracts",
-    "domainPrefix": "k1zeivuzia",
-    "requestTimeEpoch": 1657780033807,
-    "requestId": "4cc215ed-b6b7-41cc-89c2-4df49142848c",
-    "identity": {
-      "cognitoIdentityPoolId": "null",
-      "accountId": "null",
-      "cognitoIdentityId": "null",
-      "caller": "null",
-      "sourceIp": "54.240.193.3",
-      "principalOrgId": "null",
-      "accessKey": "null",
-      "cognitoAuthenticationType": "null",
-      "cognitoAuthenticationProvider": "null",
-      "userArn": "null",
-      "userAgent": "PostmanRuntime/7.29.0",
-      "user": "null"
-    },
-    "domainName": "xxxxx.execute-api.ap-southeast-2.amazonaws.com",
-    "apiId": "k1zeivuzia"
-  },
-  "body": "{\n    \"property_id\": \"usa/anytown/main-street/123\"}",
-  "isBase64Encoded": "False"
+  "Records": [
+    {
+      "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
+      "receiptHandle": "AQEBwJnKyrHigUMZj6rYigCgxlaS3SLy0a...",
+      "body": "{\n    \"property_id\": \"usa/anytown/main-street/123\"}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1545082649183",
+        "SenderId": "AIDAIENQZJOLO23YVJ4VO",
+        "ApproximateFirstReceiveTimestamp": "1545082649185"
+      },
+      "messageAttributes": {
+        "HttpMethod": {
+          "Type": "String",
+          "Value": "PUT"
+        }
+      },
+      "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-west-2:123456789012:my-queue",
+      "awsRegion": "us-west-2"
+    }
+  ]
 }

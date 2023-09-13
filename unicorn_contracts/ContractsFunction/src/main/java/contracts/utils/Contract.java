@@ -2,11 +2,6 @@ package contracts.utils;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-
-@DynamoDbBean
 public class Contract {
 
     Address address;
@@ -23,7 +18,6 @@ public class Contract {
     @JsonAlias("contract_last_modified_on")
     Long contractLastModifiedOn;
 
-    @DynamoDbAttribute("address")
     public Address getAddress() {
         return this.address;
     }
@@ -32,8 +26,6 @@ public class Contract {
         this.address = address;
     }
 
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("property_id")
     public String getPropertyId() {
         return this.propertyId;
     }
@@ -42,7 +34,6 @@ public class Contract {
         this.propertyId = propertyId;
     }
 
-    @DynamoDbAttribute("contract_id")
     public String getContractId() {
         return this.contractId;
     }
@@ -51,7 +42,6 @@ public class Contract {
         this.contractId = contractId;
     }
 
-    @DynamoDbAttribute("seller_name")
     public String getSellerName() {
         return this.sellerName;
     }
@@ -60,7 +50,6 @@ public class Contract {
         this.sellerName = sellerName;
     }
 
-    @DynamoDbAttribute("contract_status")
     public ContractStatusEnum getContractStatus() {
         return this.contractStatus;
     }
@@ -69,7 +58,6 @@ public class Contract {
         this.contractStatus = contractStatus;
     }
 
-    @DynamoDbAttribute("contract_created")
     public Long getContractCreated() {
         return this.contractCreated;
     }
@@ -78,7 +66,6 @@ public class Contract {
         this.contractCreated = contractCreated;
     }
 
-    @DynamoDbAttribute("contract_last_modified_on")
     public Long getContractLastModifiedOn() {
         return this.contractLastModifiedOn;
     }

@@ -121,8 +121,6 @@ public class RequestApprovalFunction {
                             .withStatusCode(200)
                             .withBody("'result': 'Property is already " + property.getStatus() + "; no action taken'");
                 }
-                property.setStatus(TARGET_STATE);
-                propertyTable.updateItem(property).join();
                 sendEvent(property);
 
             } catch (Exception e) {
