@@ -444,9 +444,9 @@ Resources:
 
   # CloudFormation Stack with the Cross-service EventBus Rules for Web Service
   SubscriptionsStack:
+    Type: AWS::Serverless::Application
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
-    Type: AWS::Serverless::Application
     DependsOn:
       - UnicornWebEventBusArnParam
     Properties:

@@ -470,6 +470,8 @@ Resources:
   # CloudFormation Stack with the Cross-service EventBus Rules for Properties Service
   SubscriptionsStack:
     Type: AWS::Serverless::Application
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
     DependsOn:
       - UnicornPropertiesEventBusArnParam
     Properties:
