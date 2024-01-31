@@ -3,7 +3,7 @@ package com.unicornshared;
 
 import software.amazon.awscdk.App;
 import software.amazon.awscdk.assertions.Template;
-import java.io.IOException;
+
 
 import java.util.HashMap;
 
