@@ -6,7 +6,13 @@ import com.unicornshared.UnicornNamespaces;
 import software.amazon.awscdk.services.apigateway.ApiDefinition;
 import software.amazon.awscdk.services.apigateway.EndpointType;
 import software.amazon.awscdk.services.apigateway.SpecRestApi;
+import software.amazon.awscdk.services.iam.Effect;
+import software.amazon.awscdk.services.iam.PolicyDocument;
+import software.amazon.awscdk.services.iam.PolicyStatement;
+import software.amazon.awscdk.services.iam.Role;
+import software.amazon.awscdk.services.iam.ServicePrincipal;
 import software.amazon.awscdk.services.lambda.eventsources.SqsEventSource;
+import software.amazon.awscdk.services.resourceexplorer2.CfnView;
 import software.amazon.awscdk.services.s3.assets.AssetOptions;
 import software.amazon.awscdk.BundlingOptions;
 import software.amazon.awscdk.DockerVolume;
@@ -33,8 +39,10 @@ import software.amazon.awscdk.services.pipes.CfnPipe;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
+import static java.util.Map.entry;
 import static software.amazon.awscdk.BundlingOutput.ARCHIVED;
 
 public class ContractsStack extends Stack {
@@ -77,10 +85,6 @@ public class ContractsStack extends Stack {
                 .queue(unicornContractsIngestQueue)
                 .maxReceiveCount(1)
                 .build();
-
-
-
-
 
 
 
@@ -143,8 +147,93 @@ public class ContractsStack extends Stack {
                 .build();
 
 
+        final Queue contractsTableStreamToEventPipeDLQ = Queue.Builder.create(
+                        this,"ContractsTableStreamToEventPipeDLQ")
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .encryption(QueueEncryption.SQS_MANAGED)
+                .retentionPeriod(Duration.days(14))
+                .queueName("ContractsTableStreamToEventPipeDLQ")
+                .build();
 
+        final Role contractsTableStreamToEventPipeRole = Role.Builder.create(this,"ContractsTableStreamToEventPipeRole")
+                .assumedBy(new ServicePrincipal("pipes.amazonaws.com"))
+                .inlinePolicies(Map.ofEntries(
+                        entry("ContractsTableStreamToEventPipePolicy", PolicyDocument.Builder.create()
+                                .statements(Arrays.asList(
+                                        PolicyStatement.Builder.create()
+                                                .effect(Effect.ALLOW)
+                                                .actions(Arrays.asList("dynamodb:ListStreams"))
+                                                .resources(Arrays.asList("*"))
+                                                .build(),
+                                        PolicyStatement.Builder.create()
+                                                .effect(Effect.ALLOW)
+                                                .actions(Arrays.asList("dynamodb:DescribeStream","dynamodb:GetRecords","dynamodb:GetShardIterator"))
+                                                .resources(Arrays.asList(contractsTable.getTableStreamArn()))
+                                                .build(),
+                                        PolicyStatement.Builder.create()
+                                                .effect(Effect.ALLOW)
+                                                .actions(Arrays.asList("events:PutEvents"))
+                                                .resources(Arrays.asList(eventBus.getEventBusArn()))
+                                                .build(),
+                                        PolicyStatement.Builder.create()
+                                                .effect(Effect.ALLOW)
+                                                .actions(Arrays.asList("sqs:SendMessage"))
+                                                .resources(Arrays.asList(contractsTableStreamToEventPipeDLQ.getQueueArn()))
+                                                .build()
+                                ))
+                                .build())
 
+                ))
+                .build();
 
+        final CfnPipe.FilterProperty dynamodbfilterproperty = CfnPipe.FilterProperty.builder()
+                .pattern("{\"eventName\":[\"INSERT\",\"MODIFY\"],\"dynamodb\":{\"NewImage\":{\"contract_status\":{\"S\":[\"DRAFT\",\"APPROVED\"]}}}}")
+                .build();
+        final CfnPipe contractsTableStreamToEventPipe = CfnPipe.Builder.create(this,"contractsTableStreamToEventPipe")
+                .source(contractsTable.getTableArn())
+                .sourceParameters(CfnPipe.PipeSourceParametersProperty.builder()
+                        .dynamoDbStreamParameters(CfnPipe.PipeSourceDynamoDBStreamParametersProperty.builder()
+                                .batchSize(1)
+                                .maximumRetryAttempts(3)
+                                .startingPosition("LATEST")
+                                .onPartialBatchItemFailure("AUTOMATIC_BISECT")
+
+                                .deadLetterConfig(CfnPipe.DeadLetterConfigProperty.builder()
+                                        .arn(contractsTableStreamToEventPipeDLQ.getQueueArn())
+                                        .build())
+                                .build())
+                        .filterCriteria(CfnPipe.FilterCriteriaProperty.builder()
+                                .filters(Arrays.asList(dynamodbfilterproperty))
+                                .build())
+                        .build())
+                .target(eventBus.getEventBusArn())
+                .targetParameters(CfnPipe.PipeTargetParametersProperty.builder()
+                        .eventBridgeEventBusParameters(CfnPipe.PipeTargetEventBridgeEventBusParametersProperty.builder()
+                                .source(eventBus.getEventBusArn())
+                                .detailType("ContractStatusChanged")
+                                .build())
+                        .inputTemplate(new PipeInputTemplate().toString())
+                        .build())
+                .roleArn(contractsTableStreamToEventPipeRole.getRoleArn())
+                .build();
+
+    }
+
+}
+
+class PipeInputTemplate{
+    String property_id = "<$.dynamodb.NewImage.property_id.S>";
+    String contract_id= "<$.dynamodb.NewImage.contract_id.S>";
+    String contract_status= "<$.dynamodb.NewImage.contract_status.S>";
+    String contract_last_modified_on= "<$.dynamodb.NewImage.contract_last_modified_on.S>";
+
+    @Override
+    public String toString() {
+        return "{"
+                + "        \"property_id\":\"" + property_id + "\""
+                + ",         \"contract_id\":\"" + contract_id + "\""
+                + ",         \"contract_status\":\"" + contract_status + "\""
+                + ",         \"contract_last_modified_on\":\"" + contract_last_modified_on + "\""
+                + "}";
     }
 }
