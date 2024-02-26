@@ -3,16 +3,24 @@ package com.unicorncontracts;
 
 
 import com.unicornshared.UnicornNamespaces;
+import com.unicornshared.UnicornStage;
 import software.amazon.awscdk.services.apigateway.ApiDefinition;
 import software.amazon.awscdk.services.apigateway.EndpointType;
 import software.amazon.awscdk.services.apigateway.SpecRestApi;
+import software.amazon.awscdk.services.events.EventBusPolicy;
+import software.amazon.awscdk.services.events.EventPattern;
+import software.amazon.awscdk.services.events.Rule;
+import software.amazon.awscdk.services.events.targets.CloudWatchLogGroup;
+import software.amazon.awscdk.services.iam.AccountRootPrincipal;
 import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.PolicyDocument;
 import software.amazon.awscdk.services.iam.PolicyStatement;
 import software.amazon.awscdk.services.iam.Role;
 import software.amazon.awscdk.services.iam.ServicePrincipal;
 import software.amazon.awscdk.services.lambda.eventsources.SqsEventSource;
-import software.amazon.awscdk.services.resourceexplorer2.CfnView;
+import software.amazon.awscdk.services.logs.LogGroup;
+import software.amazon.awscdk.services.logs.LogRetention;
+import software.amazon.awscdk.services.logs.RetentionDays;
 import software.amazon.awscdk.services.s3.assets.AssetOptions;
 import software.amazon.awscdk.BundlingOptions;
 import software.amazon.awscdk.DockerVolume;
@@ -45,29 +53,126 @@ import static java.util.Collections.singletonList;
 import static java.util.Map.entry;
 import static software.amazon.awscdk.BundlingOutput.ARCHIVED;
 
+
 public class ContractsStack extends Stack {
+
+
+    public static class ContractStackProps implements StackProps {
+        UnicornStage.Stage stage;
+
+        public ContractStackProps(UnicornStage.Stage stage) {
+            this.stage = stage;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        static class Builder {
+
+
+            private UnicornStage.Stage stage;
+
+            public Builder stage(UnicornStage.Stage stage) {
+                this.stage = stage;
+                return this;
+            }
+
+
+            public ContractStackProps build() {
+                return new ContractStackProps(stage);
+            }
+
+        }
+    }
 
     private final String ProjectName = "AWS Serverless Developer Experience";
     public ContractsStack(final Construct scope, final String id) {
         this(scope, id, null);
     }
 
-    public ContractsStack(final Construct scope, final String id, final StackProps props) {
+    public ContractsStack(final Construct scope, final String id, final ContractStackProps props) {
         super(scope, id, props);
 
 
-        final EventBus eventBus = EventBus.Builder.create(this,"UnicornContractsEventBus").build();
+        /* -------------------------------------------------------------------------- */
+        /*                                  EVENT BUS                                 */
+        /* -------------------------------------------------------------------------- */
+        final EventBus eventBus = EventBus.Builder.create(this,"UnicornContractsEventBus")
+                .eventBusName("UnicornContractsEventBus-"+props.stage.name)
+                .build();
+
+
+        /* -------------------------------------------------------------------------- */
+        /*                                  Log Group                                 */
+        /* -------------------------------------------------------------------------- */
+
+        final LogGroup catchAllLogGroup = LogGroup.Builder.create(this,"CatchAllLogGroup")
+                .logGroupName("/aws/events/"+props.stage.name+"/"+UnicornNamespaces.NameSpace.UnicornContractsNamespaceParam.name+"-catchall")
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .retention(props.stage.logRetentionDays)
+                .build();
+
+
+
+        final PolicyStatement contractEventsBusPublishPolicyStatement  = PolicyStatement.Builder.create()
+                .actions(Arrays.asList("events:PutEvents"))
+                .resources(Arrays.asList(eventBus.getEventBusArn()))
+                .build();
+        contractEventsBusPublishPolicyStatement.addSourceArnCondition(UnicornNamespaces.NameSpace.UnicornContractsNamespaceParam.name);
+        //TODO : Add account root permissions and conditions to match event source.
+
+        final EventBusPolicy eventBusPolicy = EventBusPolicy.Builder.create(this,"ContractEventsBusPublishPolicy")
+                .eventBus(eventBus)
+                .statement(contractEventsBusPublishPolicyStatement)
+                .statementId("OnlyContractsServiceCanPublishToEventBus-"+props.stage.name)
+                .build();
+
+        // Catchall rule used for development purposes.
+        final Rule catchAllRule = Rule.Builder.create(this,"contracts.catchall")
+                .description("Catch all events published by the contracts service.")
+                .eventBus(eventBus)
+                .targets(Arrays.asList())
+                .eventPattern(EventPattern.builder()
+                        .account(Arrays.asList(this.getAccount()))
+                        .build())
+                .build();
+
+        catchAllRule.addTarget(new CloudWatchLogGroup(catchAllLogGroup));
+
+        // Share Event bus through SSM
         final StringParameter unicornContractsEventBusNameParam = StringParameter.Builder.create(this,"UnicornContractsEventBusNameParam")
-                .parameterName("/uni-prop/UnicornContractsEventBus")
+                .parameterName("/uni-prop/"+props.stage.name+"/UnicornContractsEventBus")
                 .stringValue(eventBus.getEventBusName())
                 .build();
 
         final StringParameter unicornContractsEventBusArnParam = StringParameter.Builder.create(this,"UnicornContractsEventBusArnParam")
-                .parameterName("/uni-prop/UnicornContractsEventBusArn")
+                .parameterName("/uni-prop/"+props.stage.name+"/UnicornContractsEventBusArn")
                 .stringValue(eventBus.getEventBusArn())
                 .build();
 
 
+        /* -------------------------------------------------------------------------- */
+        /*                               DYNAMODB TABLE                               */
+        /* -------------------------------------------------------------------------- */
+        final Table contractsTable = Table.Builder.create(this,"ContractsTable")
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .partitionKey(Attribute.builder()
+                        .name("property_id")
+                        .type(AttributeType.STRING)
+                        .build())
+                .encryption(TableEncryption.DEFAULT)
+                .stream(StreamViewType.NEW_AND_OLD_IMAGES)
+                .build();
+        Tags.of(contractsTable).add("project",ProjectName);
+        Tags.of(contractsTable).add("namespace",
+                UnicornNamespaces.NameSpace.UnicornPropertiesNamespaceParam.value);
+
+
+        /* -------------------------------------------------------------------------- */
+        /*                             EVENT BRIDGE PIPES                             */
+        /* -------------------------------------------------------------------------- */
+        // Pipe to transform a changed Contracts table record to ContractStatusChanged and publish it via the UnicornContractsEventBus
 
 
         final Queue unicornContractsIngestQueue = Queue.Builder.create(
@@ -81,25 +186,13 @@ public class ContractsStack extends Stack {
         Tags.of(unicornContractsIngestQueue).add("namespace",
                 UnicornNamespaces.NameSpace.UnicornPropertiesNamespaceParam.value);
 
+        //TODO : Update this
         final DeadLetterQueue unicornContractsIngestDLQ = DeadLetterQueue.builder()
                 .queue(unicornContractsIngestQueue)
                 .maxReceiveCount(1)
                 .build();
 
 
-
-        final Table contractsTable = Table.Builder.create(this,"ContractsTable")
-                .removalPolicy(RemovalPolicy.DESTROY)
-                .partitionKey(Attribute.builder()
-                        .name("property_id")
-                        .type(AttributeType.STRING)
-                        .build())
-                .encryption(TableEncryption.DEFAULT)
-                .stream(StreamViewType.NEW_AND_OLD_IMAGES)
-                .build();
-        Tags.of(contractsTable).add("project",ProjectName);
-        Tags.of(contractsTable).add("namespace",
-                UnicornNamespaces.NameSpace.UnicornPropertiesNamespaceParam.value);
 
 
         List<String> contractsFunctionPackagingInstructions = Arrays.asList(
