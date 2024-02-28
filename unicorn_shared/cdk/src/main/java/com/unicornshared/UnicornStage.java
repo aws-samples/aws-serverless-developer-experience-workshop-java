@@ -3,7 +3,7 @@ package com.unicornshared;
 import software.amazon.awscdk.services.logs.RetentionDays;
 
 public interface UnicornStage {
-    public enum Stage{
+     enum Stage{
         local("local",RetentionDays.ONE_DAY),
         dev("dev",RetentionDays.ONE_WEEK),
         prod("prod",RetentionDays.TWO_WEEKS);
