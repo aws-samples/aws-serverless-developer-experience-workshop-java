@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>contracts</groupId>
   <artifactId>ContractsModule</artifactId>
@@ -9,36 +9,48 @@
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
+    <aws.java.sdk.version>2.27.21</aws.java.sdk.version>
+    <aws.java.powertool.version>1.18.0</aws.java.powertool.version>
+    <aws-lambda-java-events.version>3.13.0</aws-lambda-java-events.version>
+    <mockito-core.version>5.13.0</mockito-core.version>
+    <junit.version>4.13.2</junit.version>
+    <aws-lambda-java-tests.version>1.1.1</aws-lambda-java-tests.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>software.amazon.lambda</groupId>
       <artifactId>powertools-tracing</artifactId>
-      <version>1.12.2</version>
+      <version>${aws.java.powertool.version}</version>
     </dependency>
     <dependency>
       <groupId>software.amazon.lambda</groupId>
       <artifactId>powertools-logging</artifactId>
-      <version>1.12.2</version>
+      <version>${aws.java.powertool.version}</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/software.amazon.lambda/powertools-metrics -->
     <dependency>
       <groupId>software.amazon.lambda</groupId>
       <artifactId>powertools-metrics</artifactId>
-      <version>1.12.2</version>
+      <version>${aws.java.powertool.version}</version>
     </dependency>
 
 
-    <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>aws-core</artifactId>
+      <version>${aws.java.sdk.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>dynamodb</artifactId>
-      <version>2.17.211</version>
+      <version>${aws.java.sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>dynamodb-enhanced</artifactId>
-      <version>2.17.123</version>
+      <version>${aws.java.sdk.version}</version>
     </dependency>
 
 
@@ -48,67 +60,29 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>eventbridge</artifactId>
-      <version>2.17.211</version>
+      <version>${aws.java.sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-lambda-java-events</artifactId>
-      <version>3.11.0</version>
+      <version>${aws-lambda-java-events.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.15.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>2.15.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>2.17.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>2.17.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.17.2</version>
-    </dependency>
-
-
-
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>netty-nio-client</artifactId>
-      <version>2.17.211</version>
-    </dependency>
-
-
-
-
-    <!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>4.8.0</version>
+      <version>${mockito-core.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13.2</version>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-lambda-java-tests</artifactId>
-      <version>1.0.0</version>
+      <version>${aws-lambda-java-tests.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -174,14 +148,14 @@
           </execution>
         </executions>
       </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <source>16</source>
-                <target>16</target>
-            </configuration>
-        </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>16</source>
+          <target>16</target>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
