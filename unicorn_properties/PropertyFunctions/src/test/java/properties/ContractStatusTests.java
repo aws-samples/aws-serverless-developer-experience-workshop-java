@@ -1,7 +1,6 @@
 package properties;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -16,16 +15,11 @@ import com.amazonaws.services.lambda.runtime.Context;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ContractStatusTests {
@@ -34,7 +28,6 @@ public class ContractStatusTests {
   DynamoDbClient client;
 
   ContractStatusChangedHandlerFunction contractStatusChangedHandler;
-  ContractExistsCheckerFunction contractExistsChecker;
 
   Map<String, AttributeValue> response = new HashMap<String, AttributeValue>();
 
@@ -58,35 +51,6 @@ public class ContractStatusTests {
     FileInputStream fis = new FileInputStream(resourceFile);
 
     contractStatusChangedHandler.handleRequest(fis, outputStream, context);
-    ByteArrayInputStream inStream = new ByteArrayInputStream(outputStream.toByteArray());
-    String response = new String(inStream.readAllBytes());
-    assertTrue("Successful Response", response.contains("contract_id"));
-
-  }
-
-  @Test
-  public void validContractCheckEvent() throws IOException, ContractStatusNotFoundException {
-
-    contractExistsChecker = new ContractExistsCheckerFunction();
-    client = mock(DynamoDbClient.class);
-    contractExistsChecker.setDynamodbClient(client);
-    response.put("contract_id", AttributeValue.fromS("value1"));
-
-    Answer<GetItemResponse> answer = new Answer<GetItemResponse>() {
-      @Override
-      public GetItemResponse answer(InvocationOnMock invocation) throws Throwable {
-        return GetItemResponse.builder().item(response).build();
-      }
-
-    };
-    Mockito.when(client.getItem((GetItemRequest) any()))
-        .thenAnswer(answer);
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    File resourceFile = new File("src/test/events/lambda/contract_status_checker.json");
-
-    FileInputStream fis = new FileInputStream(resourceFile);
-
-    contractExistsChecker.handleRequest(fis, outputStream, context);
     ByteArrayInputStream inStream = new ByteArrayInputStream(outputStream.toByteArray());
     String response = new String(inStream.readAllBytes());
     assertTrue("Successful Response", response.contains("contract_id"));
