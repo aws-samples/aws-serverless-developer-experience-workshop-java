@@ -46,7 +46,7 @@ Globals:
   Function:
     Runtime: java21
     MemorySize: 512
-    Timeout: 10
+    Timeout: 30
     Tracing: Active
     Architectures:
       - x86_64
