@@ -141,7 +141,7 @@ Resources:
       CodeUri: PropertyFunctions
       Handler: property.requestapproval.PublicationApprovedFunction::handleRequest
       Policies:
-        - DynamoDBWritePolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref WebTable
       EventInvokeConfig:
         DestinationConfig:

@@ -85,7 +85,18 @@ public class PublicationApprovedFunction {
 
                 Key key = Key.builder().partitionValue(strPartionKey).sortValue(strSortKey).build();
                 Property existingProperty = propertyTable.getItem(key).join();
+                
+                if (existingProperty == null) {
+                    logger.error("Property not found for ID: {}", propertyId);
+                    throw new RuntimeException("Property not found with ID: " + propertyId);
+                }
+                
+                // Always set the property number explicitly to ensure it's correct
+                existingProperty.setPropertyNumber(number);
                 existingProperty.setStatus(evaluationResult);
+                
+                logger.info("Updating property with status: {} and propertyNumber: {}", 
+                           evaluationResult, existingProperty.getPropertyNumber());
                 propertyTable.putItem(existingProperty).join();
         }
 

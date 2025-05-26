@@ -48,6 +48,8 @@ public class Property {
         this.sk = sk;
     }
 
+    @JsonIgnore
+    @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore
     public String getId() {
         return (getPk() + '/' + getSk()).replace('#', '/');
     }
@@ -80,6 +82,7 @@ public class Property {
         this.street = street;
     }
 
+    @DynamoDbAttribute(value = "number")
     public String getPropertyNumber() {
         return propertyNumber;
     }

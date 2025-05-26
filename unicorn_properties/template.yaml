@@ -89,7 +89,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./PropertyFunctions
-      Handler: Unicorn.Properties.PropertiesService::Unicorn.Properties.PropertiesService.ContractStatusChangedEventHandler::FunctionHandler
+      Handler: properties.ContractStatusChangedHandlerFunction::handleRequest
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref ContractStatusTable
@@ -131,7 +131,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./PropertyFunctions
-      Handler: Unicorn.Properties.PropertiesService::Unicorn.Properties.PropertiesService.PropertiesApprovalSyncFunction::FunctionHandler
+      Handler: properties.PropertiesApprovalSyncFunction::handleRequest
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ContractStatusTable

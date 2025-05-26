@@ -141,8 +141,7 @@ public class PropertySearchFunction
 
         return response
                 .withStatusCode(200)
-                .withBody(String.format("{ \"message\": \"Properties\",  \"requestdetails\": \"%s\" }",
-                        responseString));
+                .withBody(responseString);
     }
 
     public List<Property> queryTable(String partitionkey, String sortKey) throws Exception {

@@ -1,6 +1,6 @@
 [
   {
-      "PK": "PROPERTY#usa#anytown",
+      "PK": "property#usa#anytown",
       "SK": "main-street#111",
       "country": "USA",
       "city": "Anytown",
@@ -19,7 +19,7 @@
       "status": "PENDING"
   },
   {
-      "PK": "PROPERTY#usa#main-town",
+      "PK": "property#usa#main-town",
       "SK": "my-street#222",
       "country": "USA",
       "city": "Main Town",
@@ -38,7 +38,7 @@
       "status": "PENDING"
   },
   {
-      "PK": "PROPERTY#usa#anytown",
+      "PK": "property#usa#anytown",
       "SK": "main-street#333",
       "country": "USA",
       "city": "Anytown",
