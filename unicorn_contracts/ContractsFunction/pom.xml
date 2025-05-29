@@ -16,7 +16,6 @@
     <junit.version>4.13.2</junit.version>
     <aws-lambda-java-tests.version>1.1.1</aws-lambda-java-tests.version>
   </properties>
-
   <dependencies>
     <dependency>
       <groupId>software.amazon.lambda</groupId>
@@ -28,11 +27,46 @@
       <artifactId>powertools-logging</artifactId>
       <version>${aws.java.powertool.version}</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/software.amazon.lambda/powertools-metrics -->
     <dependency>
       <groupId>software.amazon.lambda</groupId>
       <artifactId>powertools-metrics</artifactId>
       <version>${aws.java.powertool.version}</version>
+    </dependency>
+    
+    <!-- AWS Lambda Core -->
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-lambda-java-core</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+    
+    <!-- Jackson for JSON processing -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.15.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.15.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.15.2</version>
+    </dependency>
+    
+    <!-- Log4j -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.20.0</version>
     </dependency>
 
 
@@ -52,9 +86,6 @@
       <artifactId>dynamodb-enhanced</artifactId>
       <version>${aws.java.sdk.version}</version>
     </dependency>
-
-
-
 
     <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb -->
     <dependency>
@@ -85,13 +116,10 @@
       <version>${aws-lambda-java-tests.version}</version>
       <scope>test</scope>
     </dependency>
-
-
   </dependencies>
 
   <build>
     <plugins>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
