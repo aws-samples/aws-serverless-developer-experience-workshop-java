@@ -72,6 +72,8 @@ Resources:
   # Services share their event bus name and arn
   UnicornPropertiesEventBusNameParam:
     Type: AWS::SSM::Parameter
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Type: String
       Name: !Sub /uni-prop/${Stage}/UnicornPropertiesEventBus
@@ -79,6 +81,8 @@ Resources:
 
   UnicornPropertiesEventBusArnParam:
     Type: AWS::SSM::Parameter
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Type: String
       Name: !Sub /uni-prop/${Stage}/UnicornPropertiesEventBusArn
@@ -196,6 +200,8 @@ Resources:
   #### STATE MACHINE
   ApprovalStateMachine:
     Type: AWS::Serverless::StateMachine
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Name: !Sub "${AWS::StackName}-ApprovalStateMachine"
       DefinitionUri: state_machine/property_approval.asl.yaml
@@ -251,7 +257,7 @@ Resources:
               Destination: !GetAtt PropertiesServiceDLQ.Arn
       DefinitionSubstitutions:
         WaitForContractApprovalArn: !GetAtt WaitForContractApprovalFunction.Arn
-        TableName: !Ref ContractStatusTable  
+        TableName: !Ref ContractStatusTable
         ImageUploadBucketName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ImagesBucket}}"
         EventBusName: !GetAtt UnicornPropertiesEventBus.Name
         ServiceName: "{{resolve:ssm:/uni-prop/UnicornPropertiesNamespace}}"
@@ -315,7 +321,7 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: project
-          Value: !FindInMap [ Constants, ProjectName, Value ]
+          Value: !FindInMap [Constants, ProjectName, Value]
         - Key: namespace
           Value: "{{resolve:ssm:/uni-prop/UnicornPropertiesNamespace}}"
         - Key: stage
@@ -325,12 +331,16 @@ Resources:
   # Event bus for Unicorn Properties Service, used to publish and consume events
   UnicornPropertiesEventBus:
     Type: AWS::Events::EventBus
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Name: !Sub UnicornPropertiesBus-${Stage}
 
   # Event bus policy to restrict who can publish events (should only be services from UnicornPropertiesNamespace)
   UnicornPropertiesEventsBusPublishPolicy:
     Type: AWS::Events::EventBusPolicy
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       EventBusName: !Ref UnicornPropertiesEventBus
       StatementId: !Sub OnlyPropertiesServiceCanPublishToEventBus-${Stage}
@@ -349,6 +359,8 @@ Resources:
   # Catchall rule used for development purposes. Logs all events matching any of the services to CloudWatch Logs
   UnicornPropertiesCatchAllRule:
     Type: AWS::Events::Rule
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Name: properties.catchall
       Description: Catchall rule used for development purposes.
