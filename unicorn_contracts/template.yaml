@@ -204,7 +204,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt UnicornContractsIngestDLQ.Arn
         maxReceiveCount: 1
-      VisibilityTimeout: 20
+      VisibilityTimeout: 40
       Tags:
         - Key: stage
           Value: !Ref Stage
