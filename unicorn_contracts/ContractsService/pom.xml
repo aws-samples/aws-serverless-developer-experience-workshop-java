@@ -5,7 +5,7 @@
   <artifactId>ContractsService</artifactId>
   <version>1.0</version>
   <packaging>jar</packaging>
-  <name>Module for Contract service</name>
+  <name>Unicorn Contracts Service module</name>
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>

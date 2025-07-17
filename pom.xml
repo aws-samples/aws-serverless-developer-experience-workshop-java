@@ -3,13 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>unicornproperties</groupId>
-    <artifactId>cloudapp</artifactId>
+    <artifactId>UnicornProperties</artifactId>
     <version>1.0</version>
     <packaging>pom</packaging>
 
     <modules>
         <module>unicorn_contracts/ContractsService</module>
         <module>unicorn_approvals/ApprovalsService</module>
-        <module>unicorn_web/PropertyFunctions</module>
+        <module>unicorn_web/ApprovalService</module>
+        <module>unicorn_web/SearchService</module>
+        <module>unicorn_web/Common</module>
     </modules>
 </project>

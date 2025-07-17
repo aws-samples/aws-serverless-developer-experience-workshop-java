@@ -5,7 +5,7 @@
     <artifactId>ApprovalsService</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
-    <name>Property service module for java reference architecture.</name>
+    <name>Unicorn Approvals Service module</name>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -16,7 +16,6 @@
         <junit.version>4.13.2</junit.version>
         <aws-lambda-java-tests.version>1.1.1</aws-lambda-java-tests.version>
         <aws-lambda-java-core.version>1.2.3</aws-lambda-java-core.version>
-        <aws-lambda-java-events.version>3.13.0</aws-lambda-java-events.version>
         <netty-nio-client.version>2.27.21</netty-nio-client.version>
     </properties>
 
@@ -73,24 +72,11 @@
             <version>${aws.java.sdk.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-events</artifactId>
-            <version>${aws-lambda-java-events.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>netty-nio-client</artifactId>
             <version>${netty-nio-client.version}</version>
         </dependency>
 
-        <!-- AWS Lambda Core -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-core</artifactId>
-            <version>1.2.2</version>
-        </dependency>
-    
         <!-- Jackson for JSON processing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -202,9 +188,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
                 <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
         </plugins>
