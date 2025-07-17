@@ -21,7 +21,7 @@ public class CreateContractTests {
   DynamoDbClient client;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
 
     client = mock(DynamoDbClient.class);
     context = mock(Context.class);
