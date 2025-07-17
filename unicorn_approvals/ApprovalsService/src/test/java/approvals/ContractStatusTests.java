@@ -26,7 +26,7 @@ public class ContractStatusTests {
   Map<String, AttributeValue> response = new HashMap<String, AttributeValue>();
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
 
     context = mock(Context.class);
     client = mock(DynamoDbClient.class);
