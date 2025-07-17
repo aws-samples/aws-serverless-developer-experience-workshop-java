@@ -1,4 +1,4 @@
-unicorn_web/ApprovalService/target/**
+unicorn_approvals/ApprovalsService/target/**
 unicorn_contracts/ContractsService/target/**
 unicorn_web/ApprovalService/target/**
 unicorn_web/SearchService/target/**
