@@ -91,7 +91,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: PropertyFunctions
-      Handler: property.search.PropertySearchFunction::handleRequest
+      Handler: search.search.PropertySearchFunction::handleRequest
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref WebTable
@@ -110,7 +110,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: PropertyFunctions
-      Handler: property.requestapproval.RequestApprovalFunction::handleRequest
+      Handler: search.requestapproval.RequestApprovalFunction::handleRequest
       Policies:
         - EventBridgePutEventsPolicy:
             EventBusName: !Ref UnicornWebEventBus
@@ -140,7 +140,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: PropertyFunctions
-      Handler: property.requestapproval.PublicationApprovedFunction::handleRequest
+      Handler: search.requestapproval.PublicationApprovedFunction::handleRequest
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref WebTable
@@ -461,10 +461,10 @@ Outputs:
     Description: "GET request to list all properties in a given street"
     Value: !Sub "https://${UnicornWebApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}/search/{country}/{city}/{street}"
   ApiPropertyApproval:
-    Description: "POST request to add a property to the database"
+    Description: "POST request to add a search to the database"
     Value: !Sub "https://${UnicornWebApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}/request_approval"
   ApiPropertyDetails:
-    Description: "GET request to get the full details of a single property"
+    Description: "GET request to get the full details of a single search"
     Value: !Sub "https://${UnicornWebApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}/properties/{country}/{city}/{street}/{number}"
 
   #### SQS OUTPUTS

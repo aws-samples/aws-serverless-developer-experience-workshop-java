@@ -1,4 +1,4 @@
-package property.search;
+package search.search;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import property.dao.Property;
+import dao.Property;
 import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -82,7 +82,7 @@ public class PropertySearchFunction
         }
         String requestPath = input.getResource();
         String responseString = null;
-        String strPartitionKey = ("property#" + input.getPathParameters().get("country") + "#"
+        String strPartitionKey = ("search#" + input.getPathParameters().get("country") + "#"
                 + input.getPathParameters().get("city")).replace(' ', '-').toLowerCase();
 
         String strSortKey = null;

@@ -1,4 +1,4 @@
-package property.requestapproval;
+package approval.requestapproval;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,18 +7,16 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import property.dao.Property;
+import dao.Property;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -30,8 +28,7 @@ import schema.unicorn_properties.publicationevaluationcompleted.PublicationEvalu
 
 /**
  * Function checks for the existence of a contract status entry for a specified
- * property.
- * 
+ * search.
  * If an entry exists, pause the workflow, and update the record with task
  * token.
  */
@@ -67,7 +64,7 @@ public class PublicationApprovedFunction {
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-                writer.write(objectMapper.writeValueAsString("'result': 'Successfully updated property status'"));
+                writer.write(objectMapper.writeValueAsString("'result': 'Successfully updated search status'"));
                 writer.close();
 
         }
@@ -80,7 +77,7 @@ public class PublicationApprovedFunction {
                 String city = splitString[1];
                 String street = splitString[2];
                 String number = splitString[3];
-                String strPartionKey = ("property#" + country + "#" + city).replace(' ', '-').toLowerCase();
+                String strPartionKey = ("search#" + country + "#" + city).replace(' ', '-').toLowerCase();
                 String strSortKey = (street + "#" + number).replace(' ', '-').toLowerCase();
 
                 Key key = Key.builder().partitionValue(strPartionKey).sortValue(strSortKey).build();
@@ -91,11 +88,11 @@ public class PublicationApprovedFunction {
                     throw new RuntimeException("Property not found with ID: " + propertyId);
                 }
                 
-                // Always set the property number explicitly to ensure it's correct
+                // Always set the search number explicitly to ensure it's correct
                 existingProperty.setPropertyNumber(number);
                 existingProperty.setStatus(evaluationResult);
                 
-                logger.info("Updating property with status: {} and propertyNumber: {}", 
+                logger.info("Updating search with status: {} and propertyNumber: {}",
                            evaluationResult, existingProperty.getPropertyNumber());
                 propertyTable.putItem(existingProperty).join();
         }

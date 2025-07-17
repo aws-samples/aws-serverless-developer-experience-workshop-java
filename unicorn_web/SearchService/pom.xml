@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>property</groupId>
-    <artifactId>PropertyWeb</artifactId>
+    <groupId>search</groupId>
+    <artifactId>SearchService</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
-    <name>Property web module for java reference architecture.</name>
+    <name>Unicorn Web Search Service module</name>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -126,7 +126,7 @@
             <artifactId>aws-lambda-java-core</artifactId>
             <version>1.2.2</version>
         </dependency>
-        
+
         <!-- Jackson for JSON processing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -143,7 +143,7 @@
             <artifactId>jackson-annotations</artifactId>
             <version>2.15.2</version>
         </dependency>
-        
+
         <!-- Log4j -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -154,6 +154,12 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>common</groupId>
+            <artifactId>Common</artifactId>
+            <version>1.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

@@ -1,4 +1,4 @@
-package property.requestapproval;
+package search.requestapproval;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,18 +24,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import property.dao.Property;
+import dao.Property;
 import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.eventbridge.EventBridgeAsyncClient;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
@@ -46,7 +44,7 @@ import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 
 /**
- * Validates the integrity of the property content
+ * Validates the integrity of the search content
  */
 public class RequestApprovalFunction {
 
@@ -81,7 +79,7 @@ public class RequestApprovalFunction {
     @Metrics(captureColdStart = true)
     @Logging(logEvent = true, correlationIdPath = CorrelationIdPathConstants.API_GATEWAY_REST)
     public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input,
-            final Context context) throws JsonMappingException, JsonProcessingException {
+            final Context context) throws JsonProcessingException {
         {
 
             Map<String, String> headers = new HashMap<>();
@@ -95,25 +93,23 @@ public class RequestApprovalFunction {
             Matcher matcher = pattern.matcher(propertyId);
             boolean valid = matcher.matches();
             if (!valid) {
-                APIGatewayProxyResponseEvent errorResponse = response
+                return response
                         .withBody("Input invalid; must conform to regular expression: " + EXPRESSION)
                         .withStatusCode(500);
-                return errorResponse;
             }
             String[] splitString = propertyId.split("/");
             String country = splitString[0];
             String city = splitString[1];
             String street = splitString[2];
             String number = splitString[3];
-            String strPartionKey = ("property#" + country + "#" + city).replace(' ', '-').toLowerCase();
+            String strPartionKey = ("search#" + country + "#" + city).replace(' ', '-').toLowerCase();
             String strSortKey = (street + "#" + number).replace(' ', '-').toLowerCase();
             try {
                 List<Property> properties = queryTable(strPartionKey, strSortKey);
                 if (properties.size() <= 0) {
-                    APIGatewayProxyResponseEvent errorResponse = response
-                            .withBody("No property found in database with the requested property id")
+                    return response
+                            .withBody("No search found in database with the requested search id")
                             .withStatusCode(500);
-                    return errorResponse;
                 }
                 Property property = properties.get(0);
                 if (noActionSet.contains(property.getStatus())) {
@@ -124,10 +120,9 @@ public class RequestApprovalFunction {
                 sendEvent(property);
 
             } catch (Exception e) {
-                APIGatewayProxyResponseEvent errorResponse = response
+                return response
                         .withBody("Error in searching")
                         .withStatusCode(500);
-                return errorResponse;
             }
             return response
                     .withStatusCode(200)
