@@ -1,6 +1,8 @@
-unicorn_approvals/PropertyFunctions/target/*
-unicorn_contracts/ContractsFunction/target/**
-unicorn_web/PropertyFunctions/target/**
+unicorn_web/ApprovalService/target/**
+unicorn_contracts/ContractsService/target/**
+unicorn_web/ApprovalService/target/**
+unicorn_web/SearchService/target/**
+unicorn_web/Common/target/**
 **/.aws-sam/
 .DS_Store**
 .vscode/settings.json
