@@ -1,8 +1,8 @@
+# AWS Serverless Developer Experience workshop reference architecture (Java)
+
 [![Build & Test Workflow](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-java/actions/workflows/build_test.yml/badge.svg)](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-java/actions/workflows/build_test.yml)
 
-< img src="./docs/workshop_logo.png" alt="AWS Serverless Developer Experience Workshop Reference Architecture" width="80%" />
-
-# AWS Serverless Developer Experience workshop reference architecture (Java)
+<img src="./docs/workshop_logo.png" alt="AWS Serverless Developer Experience Workshop Reference Architecture" width="80%" />
 
 This repository contains the Java reference architecture for the AWS Serverless Developer Experience workshop.
 
