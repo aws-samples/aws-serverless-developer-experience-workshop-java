@@ -1,4 +1,4 @@
-package schema.unicorn_properties.publicationevaluationcompleted;
+package schema.unicorn_approvals.publicationevaluationcompleted;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,9 +1,9 @@
-package schema.unicorn_properties.publicationevaluationcompleted.marshaller;
+package schema.unicorn_approvals.publicationevaluationcompleted.marshaller;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import schema.unicorn_properties.publicationevaluationcompleted.AWSEvent;
+import schema.unicorn_approvals.publicationevaluationcompleted.AWSEvent;
 
 import java.io.IOException;
 import java.io.InputStream;

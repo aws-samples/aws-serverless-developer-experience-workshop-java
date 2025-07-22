@@ -22,9 +22,9 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import schema.unicorn_properties.publicationevaluationcompleted.marshaller.Marshaller;
-import schema.unicorn_properties.publicationevaluationcompleted.AWSEvent;
-import schema.unicorn_properties.publicationevaluationcompleted.PublicationEvaluationCompleted;
+import schema.unicorn_approvals.publicationevaluationcompleted.marshaller.Marshaller;
+import schema.unicorn_approvals.publicationevaluationcompleted.AWSEvent;
+import schema.unicorn_approvals.publicationevaluationcompleted.PublicationEvaluationCompleted;
 
 /**
  * Function checks for the existence of a contract status entry for a specified

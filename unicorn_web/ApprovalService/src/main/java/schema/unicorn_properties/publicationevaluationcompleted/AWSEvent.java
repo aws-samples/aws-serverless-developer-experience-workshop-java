@@ -1,4 +1,4 @@
-package schema.unicorn_properties.publicationevaluationcompleted;
+package schema.unicorn_approvals.publicationevaluationcompleted;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import schema.unicorn_properties.publicationevaluationcompleted.PublicationEvaluationCompleted;
+import schema.unicorn_approvals.publicationevaluationcompleted.PublicationEvaluationCompleted;
 import java.io.Serializable;
 
 public class AWSEvent<T> {
