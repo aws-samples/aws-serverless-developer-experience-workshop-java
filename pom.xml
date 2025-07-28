@@ -10,7 +10,7 @@
     <modules>
         <module>unicorn_contracts/ContractsService</module>
         <module>unicorn_approvals/ApprovalsService</module>
-        <module>unicorn_web/ApprovalService</module>
+        <module>unicorn_web/PublicationManagerService</module>
         <module>unicorn_web/SearchService</module>
         <module>unicorn_web/Common</module>
     </modules>
