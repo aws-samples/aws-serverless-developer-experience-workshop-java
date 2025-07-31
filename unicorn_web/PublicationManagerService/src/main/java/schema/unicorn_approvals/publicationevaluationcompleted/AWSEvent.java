@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import schema.unicorn_approvals.publicationevaluationcompleted.PublicationEvaluationCompleted;
 import java.io.Serializable;
 
 public class AWSEvent<T> {
