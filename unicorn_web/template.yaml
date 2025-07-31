@@ -91,7 +91,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: SearchService
-      Handler: search.search.PropertySearchFunction::handleRequest
+      Handler: search.PropertySearchFunction::handleRequest
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref WebTable

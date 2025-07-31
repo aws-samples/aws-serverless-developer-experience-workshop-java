@@ -14,3 +14,4 @@ deleteall.sh
 /unicorn_web/PropertyFunctions/PropertyWeb.iml
 /unicorn_contracts/ContractsFunction/ContractsModule.iml
 **/cdk.out/
+**/dependency-reduced-pom.xml
