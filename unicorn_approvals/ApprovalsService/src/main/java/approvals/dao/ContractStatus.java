@@ -1,47 +1,89 @@
 package approvals.dao;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * Data class representing contract status information
+ */
 public class ContractStatus {
-    String contract_id;
-    String contract_status;
-    String property_id;
-    String sfn_wait_approved_task_token;
+    
+    @JsonProperty("contract_id")
+    private final String contractId;
+    
+    @JsonProperty("contract_status")
+    private final String contractStatus;
+    
+    @JsonProperty("property_id")
+    private final String propertyId;
+    
+    @JsonProperty("sfn_wait_approved_task_token")
+    private final String sfnWaitApprovedTaskToken;
+
+    private ContractStatus(Builder builder) {
+        this.contractId = builder.contractId;
+        this.contractStatus = builder.contractStatus;
+        this.propertyId = builder.propertyId;
+        this.sfnWaitApprovedTaskToken = builder.sfnWaitApprovedTaskToken;
+    }
+
+    public String getContractId() {
+        return contractId;
+    }
+
+    public String getContractStatus() {
+        return contractStatus;
+    }
+
+    public String getPropertyId() {
+        return propertyId;
+    }
+
+    public String getSfnWaitApprovedTaskToken() {
+        return sfnWaitApprovedTaskToken;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String contractId;
+        private String contractStatus;
+        private String propertyId;
+        private String sfnWaitApprovedTaskToken;
+
+        public Builder contractId(String contractId) {
+            this.contractId = contractId;
+            return this;
+        }
+
+        public Builder contractStatus(String contractStatus) {
+            this.contractStatus = contractStatus;
+            return this;
+        }
+
+        public Builder propertyId(String propertyId) {
+            this.propertyId = propertyId;
+            return this;
+        }
+
+        public Builder sfnWaitApprovedTaskToken(String sfnWaitApprovedTaskToken) {
+            this.sfnWaitApprovedTaskToken = sfnWaitApprovedTaskToken;
+            return this;
+        }
+
+        public ContractStatus build() {
+            return new ContractStatus(this);
+        }
+    }
 
     @Override
     public String toString() {
-        return "Property [contract_id=" + contract_id + ", contract_status=" + contract_status + ", property_id="
-                + property_id + ", sfn_wait_approved_task_token=" + sfn_wait_approved_task_token + "]";
+        return "ContractStatus{" +
+                "contractId='" + contractId + '\'' +
+                ", contractStatus='" + contractStatus + '\'' +
+                ", propertyId='" + propertyId + '\'' +
+                ", sfnWaitApprovedTaskToken='" + sfnWaitApprovedTaskToken + '\'' +
+                '}';
     }
-
-    public String getContract_id() {
-        return contract_id;
-    }
-
-    public void setContract_id(String contract_id) {
-        this.contract_id = contract_id;
-    }
-
-    public String getContract_status() {
-        return contract_status;
-    }
-
-    public void setContract_status(String contract_status) {
-        this.contract_status = contract_status;
-    }
-
-    public String getProperty_id() {
-        return property_id;
-    }
-
-    public void setProperty_id(String property_id) {
-        this.property_id = property_id;
-    }
-
-    public String getSfn_wait_approved_task_token() {
-        return sfn_wait_approved_task_token;
-    }
-
-    public void setSfn_wait_approved_task_token(String sfn_wait_approved_task_token) {
-        this.sfn_wait_approved_task_token = sfn_wait_approved_task_token;
-    }
-
 }

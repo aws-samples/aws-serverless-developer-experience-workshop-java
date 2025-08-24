@@ -20,69 +20,41 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Lambda function that processes DynamoDB stream events to sync property approval status
+ * with Step Functions workflows
+ */
 public class PropertiesApprovalSyncFunction implements RequestHandler<DynamodbEvent, Serializable> {
 
-    Logger logger = LogManager.getLogger();
-    SfnAsyncClient snfClient = SfnAsyncClient.builder()
-            .httpClientBuilder(NettyNioAsyncHttpClient.builder()
-                    .maxConcurrency(100)
-                    .maxPendingConnectionAcquires(10_000))
-            .build();
+    private static final Logger logger = LogManager.getLogger();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String APPROVED_STATUS = "APPROVED";
+    
+    private final SfnAsyncClient sfnClient = SfnAsyncClient.builder()
+        .httpClientBuilder(NettyNioAsyncHttpClient.builder()
+            .maxConcurrency(100)
+            .maxPendingConnectionAcquires(10_000))
+        .build();
 
     @Tracing
     @Metrics(captureColdStart = true)
     @Logging(logEvent = true)
     public StreamsEventResponse handleRequest(DynamodbEvent input, Context context) {
-
         List<StreamsEventResponse.BatchItemFailure> batchItemFailures = new ArrayList<>();
-        String curRecordSequenceNumber = "";
 
         for (DynamodbEvent.DynamodbStreamRecord dynamodbStreamRecord : input.getRecords()) {
+            String sequenceNumber = dynamodbStreamRecord.getDynamodb().getSequenceNumber();
+            
             try {
-                // Process your record
-
-                StreamRecord dynamodbRecord = dynamodbStreamRecord.getDynamodb();
-                curRecordSequenceNumber = dynamodbRecord.getSequenceNumber();
-                Map<String, AttributeValue> newImage = dynamodbRecord.getNewImage();
-                Map<String, AttributeValue> oldImage = dynamodbRecord.getOldImage();
-                if (oldImage == null) {
-                    oldImage = new HashMap<String, AttributeValue>();
+                if (!processRecord(dynamodbStreamRecord)) {
+                    continue; // Skip this record but don't fail
                 }
-                if (newImage == null) {
-                    logger.debug("New image is null. Hence return empty stream response");
-                    return new StreamsEventResponse();
-                }
-                // if there is no token do nothing
-                if (newImage.get("sfn_wait_approved_task_token") == null
-                        && oldImage.get("sfn_wait_approved_task_token") == null) {
-                    logger.debug("No task token in both the images. Hence return empty stream response");
-                    return new StreamsEventResponse();
-                }
-
-                // if contract status is approved, send the task token
-
-                if (!newImage.get("contract_status").getS().equalsIgnoreCase("APPROVED")) {
-                    logger.debug("Contract status for property is not APPROVED : " +
-                            newImage.get("property_id").getS());
-                    return new StreamsEventResponse();
-                }
-                logger.debug("Contract status for property is APPROVED : " +
-                        newImage.get("property_id").getS());
-
-                // send task successful token
-                taskSuccessful(newImage.get("sfn_wait_approved_task_token").getS(), newImage);
-
             } catch (Exception e) {
-                /*
-                 * Since we are working with streams, we can return the failed item immediately.
-                 * Lambda will immediately begin to retry processing from this failed item
-                 * onwards.
-                 */
-                batchItemFailures.add(new StreamsEventResponse.BatchItemFailure(curRecordSequenceNumber));
+                logger.error("Failed to process record with sequence number: {}", sequenceNumber, e);
+                batchItemFailures.add(new StreamsEventResponse.BatchItemFailure(sequenceNumber));
                 return new StreamsEventResponse(batchItemFailures);
             }
         }
@@ -90,21 +62,55 @@ public class PropertiesApprovalSyncFunction implements RequestHandler<DynamodbEv
         return new StreamsEventResponse();
     }
 
-    private void taskSuccessful(String s, Map<String, AttributeValue> item) throws JsonProcessingException {
-        // create the json structure and send the token
-        ObjectMapper mapper = new ObjectMapper();
-        ContractStatus contractStatus = new ContractStatus();
-        contractStatus.setContract_id(item.get("contract_id").getS());
-        contractStatus.setContract_status(item.get("contract_status").getS());
-        contractStatus.setProperty_id(item.get("property_id").getS());
-        contractStatus.setSfn_wait_approved_task_token(item.get("sfn_wait_approved_task_token").getS());
-        String taskResult = mapper.writeValueAsString(contractStatus);
+    private boolean processRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) throws JsonProcessingException {
+        StreamRecord dynamodbRecord = streamRecord.getDynamodb();
+        Map<String, AttributeValue> newImage = dynamodbRecord.getNewImage();
+        Map<String, AttributeValue> oldImage = dynamodbRecord.getOldImage();
+
+        if (newImage == null) {
+            logger.debug("New image is null, skipping record");
+            return false;
+        }
+
+        if (!hasTaskToken(newImage, oldImage)) {
+            logger.debug("No task token found in either image, skipping record");
+            return false;
+        }
+
+        String contractStatus = newImage.get("contract_status").getS();
+        String propertyId = newImage.get("property_id").getS();
+        
+        if (!APPROVED_STATUS.equalsIgnoreCase(contractStatus)) {
+            logger.debug("Contract status for property {} is not APPROVED: {}", propertyId, contractStatus);
+            return false;
+        }
+
+        logger.info("Contract approved for property: {}", propertyId);
+        sendTaskSuccess(newImage.get("sfn_wait_approved_task_token").getS(), newImage);
+        return true;
+    }
+
+    private boolean hasTaskToken(Map<String, AttributeValue> newImage, Map<String, AttributeValue> oldImage) {
+        return (newImage.get("sfn_wait_approved_task_token") != null) ||
+               (oldImage != null && oldImage.get("sfn_wait_approved_task_token") != null);
+    }
+
+    private void sendTaskSuccess(String taskToken, Map<String, AttributeValue> item) throws JsonProcessingException {
+        ContractStatus contractStatus = ContractStatus.builder()
+            .contractId(item.get("contract_id").getS())
+            .contractStatus(item.get("contract_status").getS())
+            .propertyId(item.get("property_id").getS())
+            .sfnWaitApprovedTaskToken(item.get("sfn_wait_approved_task_token").getS())
+            .build();
+
+        String taskResult = objectMapper.writeValueAsString(contractStatus);
 
         SendTaskSuccessRequest request = SendTaskSuccessRequest.builder()
-                .taskToken(contractStatus.getSfn_wait_approved_task_token())
-                .output(taskResult)
-                .build();
-        snfClient.sendTaskSuccess(request).join();
-
+            .taskToken(taskToken)
+            .output(taskResult)
+            .build();
+            
+        sfnClient.sendTaskSuccess(request).join();
+        logger.info("Task success sent for property: {}", contractStatus.getPropertyId());
     }
 }
