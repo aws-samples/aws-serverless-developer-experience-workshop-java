@@ -1,6 +1,7 @@
 package dao;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -12,26 +13,29 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 @DynamoDbBean
 public class Property {
 
-    String country;
-    String city;
-    String street;
-    String propertyNumber;
-    String description;
-    String contract;
-    Float listprice;
-    String currency;
-    List<String> images;
-    String status;
+    private String country;
+    private String city;
+    private String street;
+    private String propertyNumber;
+    private String description;
+    private String contract;
+    private Float listprice;
+    private String currency;
+    private List<String> images;
+    private String status;
     @JsonIgnore
-    String pk;
+    private String pk;
     @JsonIgnore
-    String sk;
-    String id;
+    private String sk;
+    private String id;
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("PK")
     public String getPk() {
-        return ("PROPERTY#" + getCountry() + "#" + getCity()).replace(' ', '-').toLowerCase();
+        if (country == null || city == null) {
+            return pk; // Return stored value if components are null
+        }
+        return ("PROPERTY#" + country + "#" + city).replace(' ', '-').toLowerCase();
     }
 
     public void setPk(String pk) {
@@ -41,7 +45,10 @@ public class Property {
     @DynamoDbSortKey
     @DynamoDbAttribute("SK")
     public String getSk() {
-        return (getStreet() + "#" + getPropertyNumber()).replace(' ', '-').toLowerCase();
+        if (street == null || propertyNumber == null) {
+            return sk; // Return stored value if components are null
+        }
+        return (street + "#" + propertyNumber).replace(' ', '-').toLowerCase();
     }
 
     public void setSk(String sk) {
@@ -51,7 +58,15 @@ public class Property {
     @JsonIgnore
     @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore
     public String getId() {
-        return (getPk() + '/' + getSk()).replace('#', '/');
+        if (id != null) {
+            return id;
+        }
+        String partitionKey = getPk();
+        String sortKey = getSk();
+        if (partitionKey != null && sortKey != null) {
+            return (partitionKey + '/' + sortKey).replace('#', '/');
+        }
+        return null;
     }
 
     public void setId(String id) {
@@ -140,11 +155,28 @@ public class Property {
     }
 
     @Override
-    public String toString() {
-        return "Property [city=" + city + ", contract=" + contract + ", country=" + country + ", currency=" + currency
-                + ", description=" + description + ", id=" + getId() + ", images=" + images + ", listprice=" + listprice
-                + ", pk=" + getPk() + ", propertyNumber=" + propertyNumber + ", sk=" + getSk() + ", status=" + status
-                + ", street=" + street + "]";
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Property property = (Property) o;
+        return Objects.equals(getId(), property.getId());
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
+    }
+
+    @Override
+    public String toString() {
+        return "Property{" +
+                "country='" + country + '\'' +
+                ", city='" + city + '\'' +
+                ", street='" + street + '\'' +
+                ", propertyNumber='" + propertyNumber + '\'' +
+                ", status='" + status + '\'' +
+                ", listprice=" + listprice +
+                ", currency='" + currency + '\'' +
+                '}';
+    }
 }
