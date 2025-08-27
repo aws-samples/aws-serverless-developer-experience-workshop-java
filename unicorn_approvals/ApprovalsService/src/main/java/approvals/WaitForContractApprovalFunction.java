@@ -19,89 +19,77 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 
 /**
- * Lambda handler to update the contract status change
+ * Lambda handler to wait for contract approval in Step Functions workflow
  */
 public class WaitForContractApprovalFunction {
 
-        Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
+    private static final String TABLE_NAME = System.getenv("CONTRACT_STATUS_TABLE");
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    
+    private final DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
+        .httpClientBuilder(NettyNioAsyncHttpClient.builder()
+            .maxConcurrency(100)
+            .maxPendingConnectionAcquires(10_000))
+        .build();
 
-        final String TABLE_NAME = System.getenv("CONTRACT_STATUS_TABLE");
+    @Tracing
+    @Metrics(captureColdStart = true)
+    @Logging(logEvent = true)
+    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) 
+            throws IOException, ContractStatusNotFoundException {
+        
+        String input = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        JsonNode event = objectMapper.readTree(input);
+        
+        String propertyId = event.get("Input").get("property_id").asText();
+        String taskToken = event.get("TaskToken").asText();
 
-        DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
-                        .httpClientBuilder(NettyNioAsyncHttpClient.builder()
-                                        .maxConcurrency(100)
-                                        .maxPendingConnectionAcquires(10_000))
-                        .build();
+        logger.info("Processing property: {} with task token: {}", propertyId, taskToken);
 
-        @Tracing
-        @Metrics(captureColdStart = true)
-        @Logging(logEvent = true)
-        public void handleRequest(InputStream inputStream, OutputStream outputStream,
-                        Context context) throws IOException, ContractStatusNotFoundException {
+        Map<String, AttributeValue> contractItem = getContractStatus(propertyId);
+        updateTokenAndPauseExecution(taskToken, contractItem.get("property_id").s());
 
-                // deseralised to contract status
-                ObjectMapper objectMapper = new ObjectMapper();
-                String srtInput = new String(inputStream.readAllBytes());
-                JsonNode event = objectMapper.readTree(srtInput);
-                String propertyId = event.get("Input").get("property_id").asText();
-                String taskToken = event.get("TaskToken").asText();
-
-                logger.info("task Token : ", taskToken);
-                logger.info("Property Id : ", propertyId);
-
-                // get contract status
-                Map<String, AttributeValue> dynamodbItem = getContractStatus(propertyId);
-                updateTokenAndPauseExecution(taskToken, dynamodbItem.get("property_id").s());
-
-                String responseString = event.get("Input").asText();
-                OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-                logger.debug(responseString);
-                writer.write(responseString);
-                writer.close();
-
+        String responseString = event.get("Input").toString();
+        try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+            writer.write(responseString);
         }
+    }
 
-        private void updateTokenAndPauseExecution(String taskToken, String propertyId) {
-                Map<String, AttributeValue> key = new HashMap<String, AttributeValue>();
-                AttributeValue keyvalue = AttributeValue.fromS(propertyId);
-                key.put("property_id", keyvalue);
+    private void updateTokenAndPauseExecution(String taskToken, String propertyId) {
+        Map<String, AttributeValue> key = Map.of("property_id", AttributeValue.fromS(propertyId));
+        Map<String, AttributeValue> expressionAttributeValues = Map.of(":g", AttributeValue.fromS(taskToken));
 
-                Map<String, AttributeValue> expressionAttributeValues = new HashMap<String, AttributeValue>();
-                expressionAttributeValues.put(":g", AttributeValue.fromS(taskToken));
+        UpdateItemRequest updateItemRequest = UpdateItemRequest.builder()
+            .key(key)
+            .tableName(TABLE_NAME)
+            .updateExpression("set sfn_wait_approved_task_token = :g")
+            .expressionAttributeValues(expressionAttributeValues)
+            .build();
+            
+        dynamodbClient.updateItem(updateItemRequest).join();
+    }
 
-                UpdateItemRequest updateItemRequest = UpdateItemRequest.builder()
-                                .key(key)
-                                .tableName(TABLE_NAME)
-                                .updateExpression(
-                                                "set sfn_wait_approved_task_token = :g")
-                                .expressionAttributeValues(expressionAttributeValues)
-                                .build();
-                dynamodbClient.updateItem(updateItemRequest).join();
+    private Map<String, AttributeValue> getContractStatus(String propertyId) throws ContractStatusNotFoundException {
+        Map<String, AttributeValue> key = Map.of("property_id", AttributeValue.fromS(propertyId));
+
+        GetItemRequest request = GetItemRequest.builder()
+            .key(key)
+            .tableName(TABLE_NAME)
+            .build();
+            
+        try {
+            Map<String, AttributeValue> item = dynamodbClient.getItem(request).join().item();
+            if (item == null || item.isEmpty()) {
+                throw new ContractStatusNotFoundException("Contract status not found for property: " + propertyId);
+            }
+            return item;
+        } catch (CompletionException e) {
+            throw new ContractStatusNotFoundException("Failed to retrieve contract status: " + e.getCause().getMessage());
         }
-
-        private Map<String, AttributeValue> getContractStatus(String propertyId)
-                        throws ContractStatusNotFoundException {
-                HashMap<String, AttributeValue> keyToGet = new HashMap<String, AttributeValue>();
-
-                keyToGet.put("property_id", AttributeValue.builder()
-                                .s(propertyId).build());
-
-                GetItemRequest request = GetItemRequest.builder()
-                                .key(keyToGet)
-                                .tableName(TABLE_NAME)
-                                .build();
-                Map<String, AttributeValue> returnvalue = null;
-                try {
-                        returnvalue = dynamodbClient.getItem(request).join().item();
-                } catch (Exception exception) {
-                        throw new ContractStatusNotFoundException(exception.getLocalizedMessage());
-                }
-
-                return returnvalue;
-        }
-
+    }
 }

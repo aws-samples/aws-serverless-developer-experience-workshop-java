@@ -12,139 +12,186 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import software.amazon.cloudwatchlogs.emf.logger.MetricsLogger;
-import software.amazon.lambda.powertools.metrics.MetricsUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 
-import java.util.Date;
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
 
-    // Initialise environment variables
-    private static String DDB_TABLE = System.getenv("DYNAMODB_TABLE");
-    ObjectMapper objectMapper = new ObjectMapper();
+    private static final String DDB_TABLE = System.getenv("DYNAMODB_TABLE");
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Logger LOGGER = LogManager.getLogger(ContractEventHandler.class);
+    private static final String HTTP_METHOD_ATTR = "HttpMethod";
 
-    DynamoDbClient dynamodbClient = DynamoDbClient.builder()
-            .build();
+    private final DynamoDbClient dynamodbClient;
 
-    Logger logger = LogManager.getLogger();
-    MetricsLogger metricsLogger = MetricsUtils.metricsLogger();
+    public ContractEventHandler() {
+        this(DynamoDbClient.builder().build());
+    }
+
+    public ContractEventHandler(DynamoDbClient dynamodbClient) {
+        this.dynamodbClient = dynamodbClient;
+    }
 
     @Override
+    @Tracing
     public Void handleRequest(SQSEvent event, Context context) {
+        if (event == null || event.getRecords() == null) {
+            LOGGER.warn("Received null or empty SQS event");
+            return null;
+        }
 
         for (SQSMessage msg : event.getRecords()) {
-            // cehck in message attributes about the http method (HttpMethod)
-            logger.debug(msg.toString());
-            String httpMethod = msg.getMessageAttributes().get("HttpMethod").getStringValue();
-            if ("POST".equalsIgnoreCase(httpMethod)) {
-                try {
-                    createContract(msg.getBody());
-                    logger.debug("Contract Saved");
-                } catch (JsonProcessingException jsonException) {
-                    logger.error("Unknown Exception occoured: " + jsonException.getMessage());
-                    logger.fatal(jsonException);
-                    jsonException.printStackTrace();
-                }
-
-            } else if ("PUT".equalsIgnoreCase(httpMethod)) {
-                try {
-                    // update the event
-                    updateContract(msg.getBody());
-                } catch (JsonProcessingException jsonException) {
-                    logger.error("Unknown Exception occoured: " + jsonException.getMessage());
-                    logger.fatal(jsonException);
-                    jsonException.printStackTrace();
-                }
-
-            }
-
+            processMessage(msg);
         }
         return null;
     }
 
+    private void processMessage(SQSMessage msg) {
+        LOGGER.debug("Processing message: {}", msg.getMessageId());
+        
+        try {
+            String httpMethod = extractHttpMethod(msg);
+            String body = msg.getBody();
+            
+            if (body == null || body.trim().isEmpty()) {
+                LOGGER.warn("Empty message body for message: {}", msg.getMessageId());
+                return;
+            }
+
+            switch (httpMethod.toUpperCase()) {
+                case "POST":
+                    createContract(body);
+                    LOGGER.info("Contract created successfully for message: {}", msg.getMessageId());
+                    break;
+                case "PUT":
+                    updateContract(body);
+                    LOGGER.info("Contract updated successfully for message: {}", msg.getMessageId());
+                    break;
+                default:
+                    LOGGER.warn("Unsupported HTTP method: {} for message: {}", httpMethod, msg.getMessageId());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error processing message {}: {}", msg.getMessageId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to process contract message", e);
+        }
+    }
+
+    private String extractHttpMethod(SQSMessage msg) {
+        return Optional.ofNullable(msg.getMessageAttributes())
+                .map(attrs -> attrs.get(HTTP_METHOD_ATTR))
+                .map(attr -> attr.getStringValue())
+                .orElseThrow(() -> new IllegalArgumentException("Missing HttpMethod attribute"));
+    }
+
     @Tracing
-    private void createContract(String strContract) throws JsonProcessingException {
+    private void createContract(String contractJson) throws JsonProcessingException {
+        Contract contract = OBJECT_MAPPER.readValue(contractJson, Contract.class);
+        validateContract(contract);
+        
         String contractId = UUID.randomUUID().toString();
-        Long createDate = new Date().getTime();
-        Contract contract = objectMapper.readValue(strContract, Contract.class);
+        long timestamp = Instant.now().toEpochMilli();
 
-        Map<String, AttributeValue> expressionValues = new HashMap<>();
-        expressionValues.put(":cancelled", AttributeValue.builder().s(ContractStatusEnum.CANCELLED.name()).build());
-        expressionValues.put(":closed", AttributeValue.builder().s(ContractStatusEnum.CLOSED.name()).build());
-        expressionValues.put(":expired", AttributeValue.builder().s(ContractStatusEnum.EXPIRED.name()).build());
+        Map<String, AttributeValue> item = Map.of(
+            "property_id", AttributeValue.builder().s(contract.getPropertyId()).build(),
+            "seller_name", AttributeValue.builder().s(contract.getSellerName()).build(),
+            "contract_created", AttributeValue.builder().n(String.valueOf(timestamp)).build(),
+            "contract_last_modified_on", AttributeValue.builder().n(String.valueOf(timestamp)).build(),
+            "contract_id", AttributeValue.builder().s(contractId).build(),
+            "contract_status", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build(),
+            "address", AttributeValue.builder().m(buildAddressMap(contract.getAddress())).build()
+        );
 
-        HashMap<String, AttributeValue> itemValues = new HashMap<>();
-        itemValues.put("property_id", AttributeValue.builder().s(contract.getPropertyId()).build());
-        itemValues.put("seller_name", AttributeValue.builder().s(contract.getSellerName()).build());
-        itemValues.put("contract_created",
-                AttributeValue.builder().n(createDate.toString()).build());
-        itemValues.put("contract_last_modified_on",
-                AttributeValue.builder().n(createDate.toString()).build());
-        itemValues.put("contract_id", AttributeValue.builder().s(contractId).build());
-        itemValues.put("contract_status", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build());
+        Map<String, AttributeValue> expressionValues = Map.of(
+            ":cancelled", AttributeValue.builder().s(ContractStatusEnum.CANCELLED.name()).build(),
+            ":closed", AttributeValue.builder().s(ContractStatusEnum.CLOSED.name()).build(),
+            ":expired", AttributeValue.builder().s(ContractStatusEnum.EXPIRED.name()).build()
+        );
 
-        HashMap<String, AttributeValue> address = new HashMap<>();
-        address.put("country", AttributeValue.builder().s(contract.getAddress().getCountry()).build());
-        address.put("city", AttributeValue.builder().s(contract.getAddress().getCity()).build());
-        address.put("street", AttributeValue.builder().s(contract.getAddress().getStreet()).build());
-        address.put("number",
-                AttributeValue.builder().n(Integer.valueOf(contract.getAddress().getNumber()).toString()).build());
-
-        itemValues.put("address",
-                AttributeValue.builder().m(address).build());
-        PutItemRequest putItemRequest = PutItemRequest.builder().tableName(DDB_TABLE)
-                .item(itemValues)
-                .conditionExpression(
-                        "attribute_not_exists(property_id) OR contract_status IN (:cancelled , :closed, :expired)")
+        PutItemRequest request = PutItemRequest.builder()
+                .tableName(DDB_TABLE)
+                .item(item)
+                .conditionExpression("attribute_not_exists(property_id) OR contract_status IN (:cancelled, :closed, :expired)")
                 .expressionAttributeValues(expressionValues)
                 .build();
+
         try {
-            dynamodbClient.putItem(putItemRequest);
-        } catch (ConditionalCheckFailedException conditionalCheckFailedException) {
-            logger.error("Unable to create contract for Property '" + contract.getPropertyId()
-                    + "'.There already is a contract for this property in status " + ContractStatusEnum.DRAFT + " or "
-                    + ContractStatusEnum.APPROVED);
+            dynamodbClient.putItem(request);
+        } catch (ConditionalCheckFailedException e) {
+            LOGGER.error("Active contract already exists for property: {}", contract.getPropertyId());
+            throw new IllegalStateException("Contract already exists for property: " + contract.getPropertyId(), e);
         }
     }
 
     @Tracing
-    private void updateContract(String strContract) throws JsonProcessingException {
-        Contract contract = objectMapper.readValue(strContract, Contract.class);
-        logger.info("Property ID is : " + contract.getPropertyId());
-        HashMap<String, AttributeValue> itemKey = new HashMap<>();
+    private void updateContract(String contractJson) throws JsonProcessingException {
+        Contract contract = OBJECT_MAPPER.readValue(contractJson, Contract.class);
+        validateContractForUpdate(contract);
+        
+        LOGGER.info("Updating contract for Property ID: {}", contract.getPropertyId());
 
-        itemKey.put("property_id", AttributeValue.builder().s(contract.getPropertyId()).build());
+        Map<String, AttributeValue> key = Map.of(
+            "property_id", AttributeValue.builder().s(contract.getPropertyId()).build()
+        );
 
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":draft", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build());
-        expressionAttributeValues.put(":t", AttributeValue.builder().s(ContractStatusEnum.APPROVED.name()).build());
-        expressionAttributeValues.put(":m", AttributeValue.builder().s(String.valueOf(new Date().getTime())).build());
+        Map<String, AttributeValue> expressionValues = Map.of(
+            ":draft", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build(),
+            ":approved", AttributeValue.builder().s(ContractStatusEnum.APPROVED.name()).build(),
+            ":modifiedDate", AttributeValue.builder().n(String.valueOf(Instant.now().toEpochMilli())).build()
+        );
 
         UpdateItemRequest request = UpdateItemRequest.builder()
                 .tableName(DDB_TABLE)
-                .key(itemKey)
-                .updateExpression("set contract_status=:t, modified_date=:m")
-                .expressionAttributeValues(expressionAttributeValues)
-                .conditionExpression(
-                        "attribute_exists(property_id) AND contract_status IN (:draft)")
+                .key(key)
+                .updateExpression("SET contract_status = :approved, contract_last_modified_on = :modifiedDate")
+                .expressionAttributeValues(expressionValues)
+                .conditionExpression("attribute_exists(property_id) AND contract_status = :draft")
                 .build();
+
         try {
             dynamodbClient.updateItem(request);
-        } catch (ConditionalCheckFailedException conditionalCheckFailedException) {
-            logger.error("Unable to update contract for Property '" + contract.getPropertyId()
-                    + "'.Status is not in " + ContractStatusEnum.DRAFT);
-        } catch (ResourceNotFoundException conditionalCheckFailedException) {
-            logger.error("Unable to update contract for Property '" + contract.getPropertyId()
-                    + "'. Not Found");
+        } catch (ConditionalCheckFailedException e) {
+            LOGGER.error("Contract not in DRAFT status for property: {}", contract.getPropertyId());
+            throw new IllegalStateException("Contract not in valid state for update: " + contract.getPropertyId(), e);
+        } catch (ResourceNotFoundException e) {
+            LOGGER.error("Contract not found for property: {}", contract.getPropertyId());
+            throw new IllegalArgumentException("Contract not found: " + contract.getPropertyId(), e);
         }
     }
 
-    public void setDynamodbClient(DynamoDbClient dynamodbClient) {
-        this.dynamodbClient = dynamodbClient;
+    private void validateContract(Contract contract) {
+        if (contract == null) {
+            throw new IllegalArgumentException("Contract cannot be null");
+        }
+        if (contract.getPropertyId() == null || contract.getPropertyId().trim().isEmpty()) {
+            throw new IllegalArgumentException("Property ID is required");
+        }
+        if (contract.getSellerName() == null || contract.getSellerName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Seller name is required");
+        }
+        if (contract.getAddress() == null) {
+            throw new IllegalArgumentException("Address is required");
+        }
     }
 
+    private void validateContractForUpdate(Contract contract) {
+        if (contract == null) {
+            throw new IllegalArgumentException("Contract cannot be null");
+        }
+        if (contract.getPropertyId() == null || contract.getPropertyId().trim().isEmpty()) {
+            throw new IllegalArgumentException("Property ID is required for update");
+        }
+    }
+
+    private Map<String, AttributeValue> buildAddressMap(contracts.utils.Address address) {
+        return Map.of(
+            "country", AttributeValue.builder().s(address.getCountry()).build(),
+            "city", AttributeValue.builder().s(address.getCity()).build(),
+            "street", AttributeValue.builder().s(address.getStreet()).build(),
+            "number", AttributeValue.builder().n(String.valueOf(address.getNumber())).build()
+        );
+    }
 }

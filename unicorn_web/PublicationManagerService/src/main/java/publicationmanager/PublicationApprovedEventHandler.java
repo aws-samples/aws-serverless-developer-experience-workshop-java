@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,74 +28,100 @@ import schema.unicorn_approvals.publicationevaluationcompleted.AWSEvent;
 import schema.unicorn_approvals.publicationevaluationcompleted.PublicationEvaluationCompleted;
 
 /**
- * Function checks for the existence of a contract status entry for a specified
- * search.
- * If an entry exists, pause the workflow, and update the record with task
- * token.
+ * Processes publication evaluation completed events and updates property status.
  */
 public class PublicationApprovedEventHandler {
 
-        Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger(PublicationApprovedEventHandler.class);
+    
+    private final String tableName = System.getenv("DYNAMODB_TABLE");
+    private final DynamoDbAsyncTable<Property> propertyTable;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-        final String TABLE_NAME = System.getenv("DYNAMODB_TABLE");
+    public PublicationApprovedEventHandler() {
         DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
-                        .httpClientBuilder(NettyNioAsyncHttpClient.builder())
-                        .build();
+                .httpClientBuilder(NettyNioAsyncHttpClient.builder())
+                .build();
 
         DynamoDbEnhancedAsyncClient enhancedClient = DynamoDbEnhancedAsyncClient.builder()
-                        .dynamoDbClient(dynamodbClient)
-                        .build();
+                .dynamoDbClient(dynamodbClient)
+                .build();
 
-        DynamoDbAsyncTable<Property> propertyTable = enhancedClient.table(TABLE_NAME,
-                        TableSchema.fromBean(Property.class));
+        this.propertyTable = enhancedClient.table(tableName, TableSchema.fromBean(Property.class));
+    }
 
-        @Tracing
-        @Metrics(captureColdStart = true)
-        @Logging(logEvent = true)
-        public void handleRequest(InputStream inputStream, OutputStream outputStream,
-                        Context context) throws IOException {
+    @Tracing
+    @Metrics(captureColdStart = true)
+    @Logging(logEvent = true)
+    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
+        try {
+            AWSEvent<PublicationEvaluationCompleted> event = Marshaller.unmarshalEvent(inputStream,
+                    PublicationEvaluationCompleted.class);
 
-                AWSEvent<PublicationEvaluationCompleted> event = Marshaller.unmarshalEvent(inputStream,
-                                PublicationEvaluationCompleted.class);
+            if (event.getDetail() == null) {
+                throw new IllegalArgumentException("Event detail is null");
+            }
 
-                String propertyId = event.getDetail().getPropertyId();
-                String evaluationResult = event.getDetail().getEvaluationResult();
+            String propertyId = event.getDetail().getPropertyId();
+            String evaluationResult = event.getDetail().getEvaluationResult();
 
-                publicationApproved(evaluationResult, propertyId);
+            if (propertyId == null || propertyId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Property ID is null or empty");
+            }
 
-                ObjectMapper objectMapper = new ObjectMapper();
-                OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-                writer.write(objectMapper.writeValueAsString("'result': 'Successfully updated search status'"));
-                writer.close();
+            if (evaluationResult == null || evaluationResult.trim().isEmpty()) {
+                throw new IllegalArgumentException("Evaluation result is null or empty");
+            }
 
+            updatePropertyStatus(evaluationResult, propertyId);
+
+            String response = objectMapper.writeValueAsString(
+                Map.of("result", "Successfully updated property status"));
+            
+            try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+                writer.write(response);
+            }
+
+        } catch (Exception e) {
+            logger.error("Error processing publication evaluation event", e);
+            String errorResponse = objectMapper.writeValueAsString(
+                Map.of("error", "Failed to process event: " + e.getMessage()));
+            
+            try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+                writer.write(errorResponse);
+            }
+            throw new RuntimeException("Event processing failed", e);
         }
+    }
 
-        @Tracing
-        private void publicationApproved(String evaluationResult, String propertyId) {
+    @Tracing
+    private void updatePropertyStatus(String evaluationResult, String propertyId) {
+        try {
+            String[] parts = propertyId.split("/");
+            if (parts.length != 4) {
+                throw new IllegalArgumentException("Invalid property ID format: " + propertyId);
+            }
 
-                String[] splitString = propertyId.split("/");
-                String country = splitString[0];
-                String city = splitString[1];
-                String street = splitString[2];
-                String number = splitString[3];
-                String strPartionKey = ("search#" + country + "#" + city).replace(' ', '-').toLowerCase();
-                String strSortKey = (street + "#" + number).replace(' ', '-').toLowerCase();
+            String partitionKey = ("search#" + parts[0] + "#" + parts[1]).replace(' ', '-').toLowerCase();
+            String sortKey = (parts[2] + "#" + parts[3]).replace(' ', '-').toLowerCase();
 
-                Key key = Key.builder().partitionValue(strPartionKey).sortValue(strSortKey).build();
-                Property existingProperty = propertyTable.getItem(key).join();
-                
-                if (existingProperty == null) {
-                    logger.error("Property not found for ID: {}", propertyId);
-                    throw new RuntimeException("Property not found with ID: " + propertyId);
-                }
-                
-                // Always set the search number explicitly to ensure it's correct
-                existingProperty.setPropertyNumber(number);
-                existingProperty.setStatus(evaluationResult);
-                
-                logger.info("Updating search with status: {} and propertyNumber: {}",
-                           evaluationResult, existingProperty.getPropertyNumber());
-                propertyTable.putItem(existingProperty).join();
+            Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
+            Property existingProperty = propertyTable.getItem(key).join();
+
+            if (existingProperty == null) {
+                logger.error("Property not found for ID: {}", propertyId);
+                throw new RuntimeException("Property not found with ID: " + propertyId);
+            }
+
+            existingProperty.setPropertyNumber(parts[3]);
+            existingProperty.setStatus(evaluationResult);
+
+            logger.info("Updating property {} with status: {}", propertyId, evaluationResult);
+            propertyTable.putItem(existingProperty).join();
+            
+        } catch (Exception e) {
+            logger.error("Failed to update property status for ID: {}", propertyId, e);
+            throw new RuntimeException("Property update failed", e);
         }
-
+    }
 }

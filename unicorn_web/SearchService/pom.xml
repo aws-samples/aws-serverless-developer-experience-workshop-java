@@ -9,15 +9,14 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <aws.java.sdk.version>2.27.21</aws.java.sdk.version>
-        <aws.java.powertool.version>1.18.0</aws.java.powertool.version>
-        <aws-lambda-java-events.version>3.13.0</aws-lambda-java-events.version>
-        <mockito-core.version>5.13.0</mockito-core.version>
+        <aws.java.sdk.version>2.32.29</aws.java.sdk.version>
+        <aws.java.powertool.version>1.20.2</aws.java.powertool.version>
+        <aws-lambda-java-events.version>3.16.1</aws-lambda-java-events.version>
+        <mockito-core.version>5.18.0</mockito-core.version>
         <junit.version>4.13.2</junit.version>
-        <aws-lambda-java-tests.version>1.1.1</aws-lambda-java-tests.version>
-        <aws-lambda-java-core.version>1.2.3</aws-lambda-java-core.version>
-        <aws-lambda-java-events.version>3.13.0</aws-lambda-java-events.version>
-        <netty-nio-client.version>2.27.21</netty-nio-client.version>
+        <aws-lambda-java-tests.version>1.1.2</aws-lambda-java-tests.version>
+        <aws-lambda-java-core.version>1.3.0</aws-lambda-java-core.version>
+        <netty-nio-client.version>2.32.29</netty-nio-client.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -124,36 +123,36 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-lambda-java-core</artifactId>
-            <version>1.2.2</version>
+            <version>${aws-lambda-java-core.version}</version>
         </dependency>
 
         <!-- Jackson for JSON processing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.15.2</version>
+            <version>2.18.4</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.15.2</version>
+            <version>2.18.4</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.15.2</version>
+            <version>2.18.4</version>
         </dependency>
 
         <!-- Log4j -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.20.0</version>
+            <version>2.25.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.20.0</version>
+            <version>2.25.1</version>
         </dependency>
         <dependency>
             <groupId>common</groupId>
@@ -170,7 +169,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.5.3</version>
                 <configuration>
                     <environmentVariables>
                         <LAMBDA_TASK_ROOT>handler</LAMBDA_TASK_ROOT>
@@ -180,7 +179,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.6.0</version>
                 <configuration>
                 </configuration>
                 <executions>
@@ -193,12 +192,10 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>dev.aspectj</groupId>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.13.1</version>
+                <version>1.15.0</version>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
                     <complianceLevel>17</complianceLevel>
                     <aspectLibraries>
                         <aspectLibrary>
@@ -222,11 +219,18 @@
                         </goals>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>1.9.22.1</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.14.0</version>
                 <configuration>
                     <source>17</source>
                     <target>17</target>

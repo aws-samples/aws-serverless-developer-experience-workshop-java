@@ -2,6 +2,7 @@ unicorn_approvals/ApprovalsService/target/**
 unicorn_contracts/ContractsService/target/**
 unicorn_web/ApprovalService/target/**
 unicorn_web/SearchService/target/**
+unicorn_web/PublicationManagerService/target/**
 unicorn_web/Common/target/**
 **/.aws-sam/
 .DS_Store**

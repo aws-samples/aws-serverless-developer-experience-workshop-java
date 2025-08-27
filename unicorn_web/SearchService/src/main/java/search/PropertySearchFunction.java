@@ -29,172 +29,132 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.cloudwatchlogs.emf.logger.MetricsLogger;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.metrics.MetricsUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import software.amazon.lambda.powertools.logging.CorrelationIdPathConstants;
 import software.amazon.lambda.powertools.logging.Logging;
 
 /**
- * Handler for requests to Lambda function.
+ * Handler for property search requests.
  */
 public class PropertySearchFunction
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger logger = LogManager.getLogger(PropertySearchFunction.class);
+    private static final String APPROVED_STATUS = "APPROVED";
+    private static final String CONTENT_TYPE = "application/json";
 
-    String TABLE_NAME = System.getenv("DYNAMODB_TABLE");
+    private final String tableName = System.getenv("DYNAMODB_TABLE");
+    private final DynamoDbAsyncTable<Property> propertyTable;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
-            .httpClientBuilder(NettyNioAsyncHttpClient.builder())
-            .build();
+    public PropertySearchFunction() {
+        DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
+                .httpClientBuilder(NettyNioAsyncHttpClient.builder())
+                .build();
 
-    DynamoDbEnhancedAsyncClient enhancedClient = DynamoDbEnhancedAsyncClient.builder()
-            .dynamoDbClient(dynamodbClient)
-            .build();
+        DynamoDbEnhancedAsyncClient enhancedClient = DynamoDbEnhancedAsyncClient.builder()
+                .dynamoDbClient(dynamodbClient)
+                .build();
 
-    DynamoDbAsyncTable<Property> propertyTable = enhancedClient.table(TABLE_NAME,
-            TableSchema.fromBean(Property.class));
-
-    final String SERVICE_NAME = System.getenv("POWERTOOLS_SERVICE_NAME");
-    final String METRICS_NAMESPACE = System.getenv("POWERTOOLS_METRICS_NAMESPACE");
-    final String EVENT_BUS = System.getenv("EVENT_BUS");
-
-    MetricsLogger metricsLogger = MetricsUtils.metricsLogger();
-    ObjectMapper objectMapper = new ObjectMapper();
+        this.propertyTable = enhancedClient.table(tableName, TableSchema.fromBean(Property.class));
+    }
 
     @Tracing
     @Metrics(captureColdStart = true)
     @Logging(logEvent = true, correlationIdPath = CorrelationIdPathConstants.API_GATEWAY_REST)
     public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
+        try {
+            if (!"GET".equalsIgnoreCase(input.getHttpMethod())) {
+                return createErrorResponse(400, "Method not allowed");
+            }
 
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
-        headers.put("X-Custom-Header", "application/json");
-        APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent()
-                .withHeaders(headers);
-        String method = input.getHttpMethod();
-        if (!method.equalsIgnoreCase("get")) {
-            return response
-                    .withStatusCode(400)
-                    .withBody("{ \"message\": \"ErrorInRequest\",  \"requestdetails\": \"Input Invalid\" }");
+            Map<String, String> pathParams = input.getPathParameters();
+            if (pathParams == null || pathParams.get("country") == null || pathParams.get("city") == null) {
+                return createErrorResponse(400, "Missing required path parameters");
+            }
+
+            String partitionKey = buildPartitionKey(pathParams.get("country"), pathParams.get("city"));
+            String sortKey = buildSortKey(input.getResource(), pathParams);
+
+            List<Property> properties = queryTable(partitionKey, sortKey);
+            String responseBody = objectMapper.writeValueAsString(properties);
+
+            return createSuccessResponse(responseBody);
+
+        } catch (Exception e) {
+            logger.error("Error processing request", e);
+            return createErrorResponse(500, "Internal server error");
         }
-        String requestPath = input.getResource();
-        String responseString = null;
-        String strPartitionKey = ("search#" + input.getPathParameters().get("country") + "#"
-                + input.getPathParameters().get("city")).replace(' ', '-').toLowerCase();
-
-        String strSortKey = null;
-        switch (requestPath) {
-            case "/search/{country}/{city}":
-                // code to call
-                logger.info("path is " + requestPath);
-
-                try {
-                    List<Property> result = queryTable(strPartitionKey, null);
-                    responseString = objectMapper.writeValueAsString(result);
-                } catch (Exception e) {
-                    return response
-                            .withStatusCode(500)
-                            .withBody(
-                                    "{ \"message\": \"ErrorInRequest\",  \"requestdetails\": \"Cannot Process Request\" }");
-                }
-                break;
-            case "/search/{country}/{city}/{street}":
-                // code to call
-                logger.info("path is " + requestPath);
-                strSortKey = input.getPathParameters().get("street");
-                strSortKey = strSortKey.replace(' ', '-').toLowerCase();
-
-                try {
-                    List<Property> result = queryTable(strPartitionKey, strSortKey);
-                    responseString = objectMapper.writeValueAsString(result);
-                } catch (Exception e) {
-                    return response
-                            .withStatusCode(500)
-                            .withBody(
-                                    "{ \"message\": \"ErrorInRequest\",  \"requestdetails\": \"Cannot Process Request\" }");
-                }
-                break;
-            case "/properties/{country}/{city}/{street}/{number}":
-                logger.info("path is " + requestPath);
-                strSortKey = input.getPathParameters().get("street") + "#" + input.getPathParameters().get("number");
-                strSortKey = strSortKey.replace(' ', '-').toLowerCase();
-
-                try {
-                    List<Property> result = queryTable(strPartitionKey, strSortKey);
-                    responseString = objectMapper.writeValueAsString(result);
-                } catch (Exception e) {
-                    return response
-                            .withStatusCode(500)
-                            .withBody(
-                                    "{ \"message\": \"ErrorInRequest\",  \"requestdetails\": \"Cannot Process Request\" }");
-                }
-                break;
-            default:
-                return response
-                        .withStatusCode(400)
-                        .withBody("{ \"message\": \"ErrorInRequest\",  \"requestdetails\": \"Input Invalid\" }");
-
-        }
-
-        return response
-                .withStatusCode(200)
-                .withBody(responseString);
     }
 
-    public List<Property> queryTable(String partitionkey, String sortKey) throws Exception {
+    private String buildPartitionKey(String country, String city) {
+        return ("search#" + country + "#" + city).replace(' ', '-').toLowerCase();
+    }
+
+    private String buildSortKey(String resource, Map<String, String> pathParams) {
+        switch (resource) {
+            case "/search/{country}/{city}":
+                return null;
+            case "/search/{country}/{city}/{street}":
+                return pathParams.get("street").replace(' ', '-').toLowerCase();
+            case "/properties/{country}/{city}/{street}/{number}":
+                return (pathParams.get("street") + "#" + pathParams.get("number")).replace(' ', '-').toLowerCase();
+            default:
+                throw new IllegalArgumentException("Unsupported resource path: " + resource);
+        }
+    }
+
+    private APIGatewayProxyResponseEvent createSuccessResponse(String body) {
+        return new APIGatewayProxyResponseEvent()
+                .withStatusCode(200)
+                .withHeaders(Map.of("Content-Type", CONTENT_TYPE))
+                .withBody(body);
+    }
+
+    private APIGatewayProxyResponseEvent createErrorResponse(int statusCode, String message) {
+        String errorBody = String.format("{\"error\":\"%s\"}", message);
+        return new APIGatewayProxyResponseEvent()
+                .withStatusCode(statusCode)
+                .withHeaders(Map.of("Content-Type", CONTENT_TYPE))
+                .withBody(errorBody);
+    }
+
+    private List<Property> queryTable(String partitionKey, String sortKey) throws Exception {
+        if (partitionKey == null) {
+            throw new IllegalArgumentException("Partition key cannot be null");
+        }
+
+        List<Property> result = new ArrayList<>();
+        
+        Expression filterExpression = Expression.builder()
+                .expressionNames(Map.of("#property_status", "status"))
+                .expression("#property_status = :value")
+                .expressionValues(Map.of(":value", AttributeValue.builder().s(APPROVED_STATUS).build()))
+                .build();
+
+        QueryConditional queryConditional;
+        if (sortKey != null) {
+            Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
+            queryConditional = QueryConditional.sortBeginsWith(key);
+        } else {
+            Key key = Key.builder().partitionValue(partitionKey).build();
+            queryConditional = QueryConditional.keyEqualTo(key);
+        }
+
+        QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                .queryConditional(queryConditional)
+                .filterExpression(filterExpression)
+                .build();
 
         try {
-            if (partitionkey == null) {
-                throw new Exception("Invalid Input");
-            }
-            List<Property> result = new ArrayList<Property>();
-            SdkPublisher<Property> properties = null;
-
-            AttributeValue attributeValue = AttributeValue.builder()
-                    .s("APPROVED")
-                    .build();
-            Map<String, AttributeValue> expressionValues = new HashMap<>();
-            expressionValues.put(":value", attributeValue);
-
-            Map<String, String> expressionNames = new HashMap<>();
-            expressionNames.put("#property_status", "status");
-
-            Expression expression = Expression.builder()
-                    .expressionNames(expressionNames)
-                    .expression("#property_status = :value")
-                    .expressionValues(expressionValues)
-                    .build();
-
-            if (sortKey != null) {
-                Key key = Key.builder().partitionValue(partitionkey).sortValue(sortKey).build();
-
-                QueryConditional queryConditional = QueryConditional.sortBeginsWith(key);
-                QueryEnhancedRequest request = QueryEnhancedRequest.builder().queryConditional(queryConditional)
-                        .filterExpression(expression).build();
-                properties = propertyTable.query(request).items();
-
-            } else {
-                Key key = Key.builder().partitionValue(partitionkey).build();
-                QueryConditional queryConditional = QueryConditional.keyEqualTo(key);
-                QueryEnhancedRequest request = QueryEnhancedRequest.builder().queryConditional(queryConditional)
-                        .filterExpression(expression).build();
-                properties = propertyTable.query(request).items();
-            }
-
-            CompletableFuture<Void> future = properties.subscribe(res -> {
-                // Add response to the list
-                result.add(res);
-            });
+            SdkPublisher<Property> properties = propertyTable.query(request).items();
+            CompletableFuture<Void> future = properties.subscribe(result::add);
             future.get();
-
             return result;
-
         } catch (DynamoDbException | InterruptedException | ExecutionException e) {
-            throw new Exception(e.getMessage());
+            logger.error("Error querying DynamoDB", e);
+            throw new Exception("Database query failed: " + e.getMessage());
         }
     }
-
 }

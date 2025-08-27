@@ -1,14 +1,34 @@
 package contracts.utils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Objects;
+
 public class Address {
 
-    String country;
-    String city;
-    String street;
-    int number;
+    @JsonProperty("country")
+    private String country;
+    
+    @JsonProperty("city")
+    private String city;
+    
+    @JsonProperty("street")
+    private String street;
+    
+    @JsonProperty("number")
+    private int number;
+
+    public Address() {}
+
+    public Address(String country, String city, String street, int number) {
+        this.country = country;
+        this.city = city;
+        this.street = street;
+        this.number = number;
+    }
 
     public String getCountry() {
-        return this.country;
+        return country;
     }
 
     public void setCountry(String country) {
@@ -16,7 +36,7 @@ public class Address {
     }
 
     public String getCity() {
-        return this.city;
+        return city;
     }
 
     public void setCity(String city) {
@@ -24,7 +44,7 @@ public class Address {
     }
 
     public String getStreet() {
-        return this.street;
+        return street;
     }
 
     public void setStreet(String street) {
@@ -32,11 +52,36 @@ public class Address {
     }
 
     public int getNumber() {
-        return this.number;
+        return number;
     }
 
     public void setNumber(int number) {
         this.number = number;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Address address = (Address) o;
+        return number == address.number &&
+               Objects.equals(country, address.country) &&
+               Objects.equals(city, address.city) &&
+               Objects.equals(street, address.street);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(country, city, street, number);
+    }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+               "country='" + country + '\'' +
+               ", city='" + city + '\'' +
+               ", street='" + street + '\'' +
+               ", number=" + number +
+               '}';
+    }
 }

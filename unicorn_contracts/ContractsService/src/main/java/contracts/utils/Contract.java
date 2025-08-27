@@ -1,25 +1,43 @@
 package contracts.utils;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Objects;
 
 public class Contract {
 
-    Address address;
+    @JsonProperty("address")
+    private Address address;
+    
+    @JsonProperty("property_id")
     @JsonAlias("property_id")
-    String propertyId;
+    private String propertyId;
+    
+    @JsonProperty("contract_id")
     @JsonAlias("contract_id")
-    String contractId;
+    private String contractId;
+    
+    @JsonProperty("seller_name")
     @JsonAlias("seller_name")
-    String sellerName;
+    private String sellerName;
+    
+    @JsonProperty("contract_status")
     @JsonAlias("contract_status")
-    ContractStatusEnum contractStatus;
+    private ContractStatusEnum contractStatus;
+    
+    @JsonProperty("contract_created")
     @JsonAlias("contract_created")
-    Long contractCreated;
+    private Long contractCreated;
+    
+    @JsonProperty("contract_last_modified_on")
     @JsonAlias("contract_last_modified_on")
-    Long contractLastModifiedOn;
+    private Long contractLastModifiedOn;
+
+    public Contract() {}
 
     public Address getAddress() {
-        return this.address;
+        return address;
     }
 
     public void setAddress(Address address) {
@@ -27,7 +45,7 @@ public class Contract {
     }
 
     public String getPropertyId() {
-        return this.propertyId;
+        return propertyId;
     }
 
     public void setPropertyId(String propertyId) {
@@ -35,7 +53,7 @@ public class Contract {
     }
 
     public String getContractId() {
-        return this.contractId;
+        return contractId;
     }
 
     public void setContractId(String contractId) {
@@ -43,7 +61,7 @@ public class Contract {
     }
 
     public String getSellerName() {
-        return this.sellerName;
+        return sellerName;
     }
 
     public void setSellerName(String sellerName) {
@@ -51,7 +69,7 @@ public class Contract {
     }
 
     public ContractStatusEnum getContractStatus() {
-        return this.contractStatus;
+        return contractStatus;
     }
 
     public void setContractStatus(ContractStatusEnum contractStatus) {
@@ -59,7 +77,7 @@ public class Contract {
     }
 
     public Long getContractCreated() {
-        return this.contractCreated;
+        return contractCreated;
     }
 
     public void setContractCreated(Long contractCreated) {
@@ -67,11 +85,34 @@ public class Contract {
     }
 
     public Long getContractLastModifiedOn() {
-        return this.contractLastModifiedOn;
+        return contractLastModifiedOn;
     }
 
     public void setContractLastModifiedOn(Long contractLastModifiedOn) {
         this.contractLastModifiedOn = contractLastModifiedOn;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Contract contract = (Contract) o;
+        return Objects.equals(propertyId, contract.propertyId) &&
+               Objects.equals(contractId, contract.contractId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(propertyId, contractId);
+    }
+
+    @Override
+    public String toString() {
+        return "Contract{" +
+               "propertyId='" + propertyId + '\'' +
+               ", contractId='" + contractId + '\'' +
+               ", sellerName='" + sellerName + '\'' +
+               ", contractStatus=" + contractStatus +
+               '}';
+    }
 }
