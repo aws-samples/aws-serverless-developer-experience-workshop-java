@@ -76,6 +76,7 @@ public class PropertySearchFunction
 
             String partitionKey = buildPartitionKey(pathParams.get("country"), pathParams.get("city"));
             String sortKey = buildSortKey(input.getResource(), pathParams);
+            logger.info("Partition Key: {}, Sort Key: {}", partitionKey, sortKey);
 
             List<Property> properties = queryTable(partitionKey, sortKey);
             String responseBody = objectMapper.writeValueAsString(properties);
@@ -89,7 +90,7 @@ public class PropertySearchFunction
     }
 
     private String buildPartitionKey(String country, String city) {
-        return ("search#" + country + "#" + city).replace(' ', '-').toLowerCase();
+        return ("PROPERTY#" + country + "#" + city).replace(' ', '-');
     }
 
     private String buildSortKey(String resource, Map<String, String> pathParams) {

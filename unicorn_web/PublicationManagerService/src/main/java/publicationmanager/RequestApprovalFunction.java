@@ -12,8 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,7 +35,6 @@ import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.eventbridge.EventBridgeAsyncClient;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequestEntry;
-import software.amazon.lambda.powertools.logging.CorrelationIdPathConstants;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -49,7 +47,6 @@ public class RequestApprovalFunction {
     private static final Logger logger = LogManager.getLogger(RequestApprovalFunction.class);
     private static final Set<String> NO_ACTION_STATUSES = new HashSet<>(Arrays.asList("APPROVED"));
     private static final String PROPERTY_ID_PATTERN = "[a-z-]+\\/[a-z-]+\\/[a-z][a-z0-9-]*\\/[0-9-]+";
-    private static final String CONTENT_TYPE = "application/json";
     
     private final Pattern propertyIdPattern = Pattern.compile(PROPERTY_ID_PATTERN);
     private final String tableName = System.getenv("DYNAMODB_TABLE");
@@ -60,6 +57,7 @@ public class RequestApprovalFunction {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RequestApprovalFunction() {
+        
         DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
                 .httpClientBuilder(NettyNioAsyncHttpClient.builder())
                 .build();
@@ -76,72 +74,74 @@ public class RequestApprovalFunction {
 
     @Tracing
     @Metrics(captureColdStart = true)
-    @Logging(logEvent = true, correlationIdPath = CorrelationIdPathConstants.API_GATEWAY_REST)
-    public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input,
-            final Context context) {
-        try {
-            if (input.getBody() == null || input.getBody().trim().isEmpty()) {
-                return createErrorResponse(400, "Request body is required");
+    @Logging(logEvent = true)
+    public void handleRequest(final SQSEvent input, final Context context) {
+        logger.info("Environment variables - DYNAMODB_TABLE: {}, EVENT_BUS: {}", tableName, eventBus);
+        logger.info("Starting approval request processing for {} messages", input.getRecords().size());
+
+        
+        for (SQSEvent.SQSMessage message : input.getRecords()) {
+            try {
+                String body = message.getBody();
+                logger.info("Processing SQS message: {}", body);
+                
+                if (body == null || body.trim().isEmpty()) {
+                    logger.warn("Message body is null or empty");
+                    continue;
+                }
+
+                JsonNode rootNode = objectMapper.readTree(body);
+                JsonNode propertyIdNode = rootNode.get("property_id");
+                
+                if (propertyIdNode == null) {
+                    logger.warn("property_id field missing from message");
+                    continue;
+                }
+
+                String propertyId = propertyIdNode.asText();
+                logger.info("Processing approval request for property: {}", propertyId);
+                
+                if (!propertyIdPattern.matcher(propertyId).matches()) {
+                    logger.warn("Invalid property_id format: {}", propertyId);
+                    continue;
+                }
+
+                PropertyComponents components = parsePropertyId(propertyId);
+                logger.info("Parsed property ID components: {}", components);
+                List<Property> properties = queryTable(components.partitionKey, components.sortKey);
+                
+                if (properties.isEmpty()) {
+                    logger.warn("Property not found in database: {}", propertyId);
+                    continue;
+                }
+
+                Property property = properties.get(0);
+                logger.info("Found property with status: {}", property.getStatus());
+                
+                if (NO_ACTION_STATUSES.contains(property.getStatus())) {
+                    logger.info("Property already approved, no action needed: {}", propertyId);
+                    continue;
+                }
+
+                sendEvent(property);
+                logger.info("Approval request completed successfully for property: {}", propertyId);
+
+            } catch (JsonProcessingException e) {
+                logger.error("Invalid JSON in message body: {}", message.getBody(), e);
+            } catch (Exception e) {
+                logger.error("Error processing approval request for message: {}", message.getBody(), e);
             }
-
-            JsonNode rootNode = objectMapper.readTree(input.getBody());
-            JsonNode propertyIdNode = rootNode.get("property_id");
-            
-            if (propertyIdNode == null) {
-                return createErrorResponse(400, "property_id field is required");
-            }
-
-            String propertyId = propertyIdNode.asText();
-            if (!propertyIdPattern.matcher(propertyId).matches()) {
-                return createErrorResponse(400, "Invalid property_id format. Must match: " + PROPERTY_ID_PATTERN);
-            }
-
-            PropertyComponents components = parsePropertyId(propertyId);
-            List<Property> properties = queryTable(components.partitionKey, components.sortKey);
-            
-            if (properties.isEmpty()) {
-                return createErrorResponse(404, "Property not found");
-            }
-
-            Property property = properties.get(0);
-            if (NO_ACTION_STATUSES.contains(property.getStatus())) {
-                return createSuccessResponse("Property is already " + property.getStatus() + "; no action taken");
-            }
-
-            sendEvent(property);
-            return createSuccessResponse("Approval requested successfully");
-
-        } catch (JsonProcessingException e) {
-            logger.error("Invalid JSON in request body", e);
-            return createErrorResponse(400, "Invalid JSON format");
-        } catch (Exception e) {
-            logger.error("Error processing approval request", e);
-            return createErrorResponse(500, "Internal server error");
         }
     }
 
     private PropertyComponents parsePropertyId(String propertyId) {
         String[] parts = propertyId.split("/");
-        String partitionKey = ("search#" + parts[0] + "#" + parts[1]).replace(' ', '-').toLowerCase();
+        String partitionKey = ("PROPERTY#" + parts[0] + "#" + parts[1]).replace(' ', '-');
         String sortKey = (parts[2] + "#" + parts[3]).replace(' ', '-').toLowerCase();
         return new PropertyComponents(partitionKey, sortKey);
     }
 
-    private APIGatewayProxyResponseEvent createSuccessResponse(String message) {
-        String body = String.format("{\"result\":\"%s\"}", message);
-        return new APIGatewayProxyResponseEvent()
-                .withStatusCode(200)
-                .withHeaders(Map.of("Content-Type", CONTENT_TYPE))
-                .withBody(body);
-    }
 
-    private APIGatewayProxyResponseEvent createErrorResponse(int statusCode, String message) {
-        String body = String.format("{\"error\":\"%s\"}", message);
-        return new APIGatewayProxyResponseEvent()
-                .withStatusCode(statusCode)
-                .withHeaders(Map.of("Content-Type", CONTENT_TYPE))
-                .withBody(body);
-    }
 
     private static class PropertyComponents {
         final String partitionKey;
@@ -154,7 +154,10 @@ public class RequestApprovalFunction {
     }
 
     private List<Property> queryTable(String partitionKey, String sortKey) throws Exception {
+        logger.info("Starting DynamoDB query with partitionKey: {}, sortKey: {}", partitionKey, sortKey);
+        
         if (partitionKey == null || sortKey == null) {
+            logger.error("Null keys provided - partitionKey: {}, sortKey: {}", partitionKey, sortKey);
             throw new IllegalArgumentException("Partition key and sort key cannot be null");
         }
 
@@ -166,12 +169,15 @@ public class RequestApprovalFunction {
                 .build();
 
         try {
+            logger.debug("Executing DynamoDB query on table: {}", tableName);
             SdkPublisher<Property> properties = propertyTable.query(request).items();
             CompletableFuture<Void> future = properties.subscribe(result::add);
             future.get();
+            logger.info("DynamoDB query completed successfully, found {} properties", result.size());
             return result;
         } catch (DynamoDbException | InterruptedException | ExecutionException e) {
-            logger.error("Error querying DynamoDB", e);
+            logger.error("Error querying DynamoDB with partitionKey: {}, sortKey: {}, table: {}", 
+                        partitionKey, sortKey, tableName, e);
             throw new Exception("Database query failed: " + e.getMessage());
         }
     }
@@ -179,6 +185,8 @@ public class RequestApprovalFunction {
     @Tracing
     @Metrics
     private void sendEvent(Property property) throws JsonProcessingException {
+        logger.info("Creating approval event for property: {}", property.getId());
+        
         RequestApproval event = new RequestApproval();
         event.setPropertyId(property.getId());
         
@@ -189,6 +197,7 @@ public class RequestApprovalFunction {
         event.setAddress(address);
 
         String eventString = objectMapper.writeValueAsString(event);
+        logger.info("Event payload created: {}", eventString);
 
         PutEventsRequestEntry requestEntry = PutEventsRequestEntry.builder()
                 .eventBusName(eventBus)
@@ -202,8 +211,15 @@ public class RequestApprovalFunction {
                 .entries(requestEntry)
                 .build();
 
-        eventBridgeClient.putEvents(eventsRequest).join();
-        logger.info("Event sent successfully for property: {}", property.getId());
+        logger.debug("Sending event to EventBridge bus: {}", eventBus);
+        try {
+            eventBridgeClient.putEvents(eventsRequest).join();
+            logger.info("Event sent successfully for property: {}", property.getId());
+        } catch (Exception e) {
+            logger.error("Failed to send event to EventBridge for property: {}, bus: {}", 
+                        property.getId(), eventBus, e);
+            throw e;
+        }
     }
 }
 

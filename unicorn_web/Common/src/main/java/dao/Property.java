@@ -35,7 +35,7 @@ public class Property {
         if (country == null || city == null) {
             return pk; // Return stored value if components are null
         }
-        return ("PROPERTY#" + country + "#" + city).replace(' ', '-').toLowerCase();
+        return ("PROPERTY#" + country.toLowerCase() + "#" + city.toLowerCase()).replace(' ', '-');
     }
 
     public void setPk(String pk) {

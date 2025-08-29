@@ -96,14 +96,19 @@ public class PublicationApprovedEventHandler {
 
     @Tracing
     private void updatePropertyStatus(String evaluationResult, String propertyId) {
+        logger.info("Updating property status for property ID: {}", propertyId);
+        logger.info("Evaluation result: {}", evaluationResult);
         try {
             String[] parts = propertyId.split("/");
             if (parts.length != 4) {
                 throw new IllegalArgumentException("Invalid property ID format: " + propertyId);
             }
 
-            String partitionKey = ("search#" + parts[0] + "#" + parts[1]).replace(' ', '-').toLowerCase();
+            String partitionKey = ("PROPERTY#" + parts[0] + "#" + parts[1]).replace(' ', '-');
             String sortKey = (parts[2] + "#" + parts[3]).replace(' ', '-').toLowerCase();
+
+            logger.info("Paritition Key: {}", partitionKey);
+            logger.info("Sort Key: {}", sortKey);
 
             Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
             Property existingProperty = propertyTable.getItem(key).join();
@@ -112,7 +117,8 @@ public class PublicationApprovedEventHandler {
                 logger.error("Property not found for ID: {}", propertyId);
                 throw new RuntimeException("Property not found with ID: " + propertyId);
             }
-
+            logger.info("Existing property: {}", existingProperty);
+            
             existingProperty.setPropertyNumber(parts[3]);
             existingProperty.setStatus(evaluationResult);
 
