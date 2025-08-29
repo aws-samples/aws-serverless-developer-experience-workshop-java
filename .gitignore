@@ -16,3 +16,5 @@ deleteall.sh
 /unicorn_contracts/ContractsFunction/ContractsModule.iml
 **/cdk.out/
 **/dependency-reduced-pom.xml
+.idea
+.kiro
