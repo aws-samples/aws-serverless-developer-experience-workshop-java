@@ -45,15 +45,24 @@ public class ContractStatusChangedHandlerFunction {
     @Metrics(captureColdStart = true)
     @Logging(logEvent = true)
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
+        logger.info("TABLE_NAME environment variable: {}", TABLE_NAME);
+        
         Event event = Marshaller.unmarshal(inputStream, Event.class);
         ContractStatusChanged contractStatusChanged = event.getDetail();
+        logger.info("Received event: {}", contractStatusChanged);
         
-        saveContractStatus(
-            contractStatusChanged.getPropertyId(), 
-            contractStatusChanged.getContractStatus(),
-            contractStatusChanged.getContractId(),
-            contractStatusChanged.getContractLastModifiedOn()
-        );
+        try {
+            saveContractStatus(
+                contractStatusChanged.getPropertyId(), 
+                contractStatusChanged.getContractStatus(),
+                contractStatusChanged.getContractId(),
+                contractStatusChanged.getContractLastModifiedOn()
+            );
+            logger.info("Successfully updated contract status for property: {}", contractStatusChanged.getPropertyId());
+        } catch (Exception e) {
+            logger.error("Failed to update contract status for property: {}", contractStatusChanged.getPropertyId(), e);
+            throw e;
+        }
 
         try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
             writer.write(objectMapper.writeValueAsString(event.getDetail()));
@@ -62,6 +71,12 @@ public class ContractStatusChangedHandlerFunction {
 
     @Tracing
     void saveContractStatus(String propertyId, String contractStatus, String contractId, Long contractLastModifiedOn) {
+        if (TABLE_NAME == null || TABLE_NAME.isEmpty()) {
+            throw new RuntimeException("CONTRACT_STATUS_TABLE environment variable is not set");
+        }
+        
+        logger.info("Updating DynamoDB table: {} for property: {}", TABLE_NAME, propertyId);
+        
         Map<String, AttributeValue> key = Map.of("property_id", AttributeValue.fromS(propertyId));
         
         Map<String, AttributeValue> expressionAttributeValues = Map.of(
@@ -78,6 +93,7 @@ public class ContractStatusChangedHandlerFunction {
             .build();
 
         dynamodbClient.updateItem(updateItemRequest);
+        logger.info("DynamoDB update completed for property: {}", propertyId);
     }
 
     public void setDynamodbClient(DynamoDbClient dynamodbClient) {
