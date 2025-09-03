@@ -30,15 +30,15 @@ import schema.unicorn_approvals.publicationevaluationcompleted.PublicationEvalua
 /**
  * Processes publication evaluation completed events and updates property status.
  */
-public class PublicationApprovedEventHandler {
+public class PublicationEvaluationEventHandler {
 
-    private static final Logger logger = LogManager.getLogger(PublicationApprovedEventHandler.class);
+    private static final Logger logger = LogManager.getLogger(PublicationEvaluationEventHandler.class);
     
     private final String tableName = System.getenv("DYNAMODB_TABLE");
     private final DynamoDbAsyncTable<Property> propertyTable;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public PublicationApprovedEventHandler() {
+    public PublicationEvaluationEventHandler() {
         DynamoDbAsyncClient dynamodbClient = DynamoDbAsyncClient.builder()
                 .httpClientBuilder(NettyNioAsyncHttpClient.builder())
                 .build();
