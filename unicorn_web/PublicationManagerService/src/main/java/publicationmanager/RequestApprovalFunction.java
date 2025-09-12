@@ -36,7 +36,7 @@ import software.amazon.awssdk.services.eventbridge.EventBridgeAsyncClient;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequestEntry;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 
 /**
@@ -73,7 +73,7 @@ public class RequestApprovalFunction {
     }
 
     @Tracing
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     @Logging(logEvent = true)
     public void handleRequest(final SQSEvent input, final Context context) {
         logger.info("Environment variables - DYNAMODB_TABLE: {}, EVENT_BUS: {}", tableName, eventBus);
@@ -183,7 +183,6 @@ public class RequestApprovalFunction {
     }
 
     @Tracing
-    @Metrics
     private void sendEvent(Property property) throws JsonProcessingException {
         logger.info("Creating approval event for property: {}", property.getId());
         

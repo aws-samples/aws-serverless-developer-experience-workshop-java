@@ -21,7 +21,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import schema.unicorn_approvals.publicationevaluationcompleted.marshaller.Marshaller;
 import schema.unicorn_approvals.publicationevaluationcompleted.AWSEvent;
@@ -51,7 +51,7 @@ public class PublicationEvaluationEventHandler {
     }
 
     @Tracing
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     @Logging(logEvent = true)
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
         try {

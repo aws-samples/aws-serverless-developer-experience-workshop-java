@@ -11,8 +11,8 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +42,7 @@ public class ContractStatusChangedHandlerFunction {
      * @throws IOException if there's an error processing the event
      */
     @Tracing
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     @Logging(logEvent = true)
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
         logger.info("TABLE_NAME environment variable: {}", TABLE_NAME);
