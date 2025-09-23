@@ -78,7 +78,7 @@ Resources:
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: SearchService
+      CodeUri: ../SearchService
       Handler: search.PropertySearchFunction::handleRequest
       Policies:
         - DynamoDBReadPolicy:
@@ -97,7 +97,7 @@ Resources:
   RequestApprovalFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: PublicationManagerService
+      CodeUri: ../PublicationManagerService
       Handler: publicationmanager.RequestApprovalFunction::handleRequest
       Policies:
         - EventBridgePutEventsPolicy:
@@ -127,8 +127,8 @@ Resources:
   PublicationEvaluationEventHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: PublicationManagerService
-      Handler: publicationmanager.publicationEvaluationEventHandler::handleRequest
+      CodeUri: ../PublicationManagerService
+      Handler: publicationmanager.PublicationEvaluationEventHandlerFunction::handleRequest
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PropertiesTable

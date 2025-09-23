@@ -83,7 +83,7 @@ Resources:
   ContractStatusChangedHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ApprovalsService
+      CodeUri: ../ApprovalsService
       Handler: approvals.ContractStatusChangedHandlerFunction::handleRequest
       Policies:
         - DynamoDBWritePolicy:
@@ -126,7 +126,7 @@ Resources:
   PropertiesApprovalSyncFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ApprovalsService
+      CodeUri: ../ApprovalsService
       Handler: approvals.PropertiesApprovalSyncFunction::handleRequest
       Policies:
         - DynamoDBReadPolicy:
@@ -174,7 +174,7 @@ Resources:
   WaitForContractApprovalFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ApprovalsService
+      CodeUri: ../ApprovalsService
       Handler: approvals.WaitForContractApprovalFunction::handleRequest
       Policies:
         - DynamoDBCrudPolicy:
