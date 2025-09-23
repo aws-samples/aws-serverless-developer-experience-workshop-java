@@ -13,8 +13,15 @@ This directory contains AWS SAM (Serverless Application Model) templates for the
 - **Lambda Functions**:
 
   - `SearchFunction`: Handles property search and details requests from the API Gateway
+    - Runtime: Java 21
+    - Memory: 512MB, Timeout: 15s
+    - Integrated with AWS Powertools for observability
   - `RequestApprovalFunction`: Processes queued API requests to approve properties from the ingest queue
+    - Runtime: Java 21
+    - Memory: 512MB, Timeout: 15s
   - `PublicationEvaluationEventHandlerFunction`: Responds to PublicationEvaluationCompleted events from the Approvals service
+    - Runtime: Java 21
+    - Memory: 512MB, Timeout: 15s
 
 - **API Gateway REST API** (`UnicornWebApi`): RESTful API for property management with endpoints for:
 
@@ -194,7 +201,9 @@ All templates accept a `Stage` parameter with allowed values:
 
 ### Environment Variables (Global)
 
+- `DYNAMODB_TABLE`: Reference to PropertiesTable
 - `SERVICE_NAMESPACE`: Retrieved from SSM parameter
+- `EVENT_BUS`: EventBridge bus name
 - Event bus ARNs and names shared via SSM parameters
 
 ### Security

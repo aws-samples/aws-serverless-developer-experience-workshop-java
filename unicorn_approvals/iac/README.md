@@ -13,8 +13,15 @@ This directory contains AWS SAM (Serverless Application Model) templates for the
 - **Lambda Functions**:
 
   - `ContractStatusChangedHandlerFunction`: Processes contract status change events from the Contracts service
+    - Runtime: Java 21
+    - Memory: 512MB, Timeout: 15s
+    - Integrated with AWS Powertools for observability
   - `PropertiesApprovalSyncFunction`: DynamoDB stream processor that resumes paused Step Functions executions
+    - Runtime: Java 21
+    - Memory: 512MB, Timeout: 15s
   - `WaitForContractApprovalFunction`: Implements the "wait for approval" pattern for Step Functions
+    - Runtime: Java 21
+    - Memory: 512MB, Timeout: 15s
 
 - **Step Functions State Machine** (`ApprovalStateMachine`): Orchestrates the property approval workflow including:
 
@@ -190,7 +197,9 @@ All templates accept a `Stage` parameter with allowed values:
 
 ### Environment Variables (Global)
 
+- `DYNAMODB_TABLE`: Reference to ContractStatusTable
 - `SERVICE_NAMESPACE`: Retrieved from SSM parameter
+- `EVENT_BUS`: EventBridge bus name
 - Event bus ARNs and names shared via SSM parameters
 
 ### Security

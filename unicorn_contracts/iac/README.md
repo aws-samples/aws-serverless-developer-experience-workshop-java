@@ -74,7 +74,7 @@ Note: This template provides the foundation for event-driven integrations for al
 #### Lambda Functions
 
 - **ContractEventHandlerFunction**: Processes contract requests from SQS queue
-  - Runtime: .NET 8
+  - Runtime: Java 21
   - Memory: 512MB, Timeout: 15s
   - Integrated with AWS Powertools for observability
 
@@ -161,7 +161,7 @@ All templates accept a `Stage` parameter with allowed values:
 
 - `DYNAMODB_TABLE`: Reference to ContractsTable
 - `SERVICE_NAMESPACE`: Retrieved from SSM parameter
-- `POWERTOOLS_*`: AWS Powertools configuration for observability
+- `EVENT_BUS`: EventBridge bus name
 
 ### Security
 
@@ -206,7 +206,7 @@ All templates accept a `Stage` parameter with allowed values:
 
 1. **SSM Parameter Dependencies**: Ensure domain template is deployed first
 2. **API Definition**: Verify `api.yaml` exists in the correct location
-3. **Lambda Code**: Ensure ContractsService directory contains compiled code
+3. **Lambda Code**: Ensure ContractsService directory contains compiled JAR files
 4. **Permissions**: Verify IAM capabilities are included in deployment commands
 
 ### Monitoring
