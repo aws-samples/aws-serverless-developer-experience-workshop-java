@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class WaitForContractApprovalFunction {
         .build();
 
     @Tracing
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     @Logging(logEvent = true)
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) 
             throws IOException, ContractStatusNotFoundException {

@@ -15,7 +15,7 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.sfn.SfnAsyncClient;
 import software.amazon.awssdk.services.sfn.model.SendTaskSuccessRequest;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 
 import java.io.Serializable;
@@ -40,7 +40,7 @@ public class PropertiesApprovalSyncFunction implements RequestHandler<DynamodbEv
         .build();
 
     @Tracing
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     @Logging(logEvent = true)
     public StreamsEventResponse handleRequest(DynamodbEvent input, Context context) {
         List<StreamsEventResponse.BatchItemFailure> batchItemFailures = new ArrayList<>();

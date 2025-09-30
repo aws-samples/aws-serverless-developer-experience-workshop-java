@@ -12,7 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 
 import java.time.Instant;
 import java.util.Map;
@@ -38,6 +40,8 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
 
     @Override
     @Tracing
+    @FlushMetrics(captureColdStart = true)
+    @Logging(logEvent = true)
     public Void handleRequest(SQSEvent event, Context context) {
         if (event == null || event.getRecords() == null) {
             LOGGER.warn("Received null or empty SQS event");
