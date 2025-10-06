@@ -50,7 +50,6 @@ deploy-schema: ## Deploy event schema
 		--template-file infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml \
 		--stack-name $(STACK_PREFIX)-web-schema-PublicationApprovalRequested \
 		--parameter-overrides Stage=$(STAGE) \
-		--capabilities CAPABILITY_IAM \
 		--region $(REGION) \
 		--resolve-s3 \
 		--no-confirm-changeset \
@@ -62,7 +61,6 @@ deploy-subscriptions: ## Deploy event subscriptions
 		--template-file infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml \
 		--stack-name $(STACK_PREFIX)-web-approvals-subscriptions \
 		--parameter-overrides Stage=$(STAGE) \
-		--capabilities CAPABILITY_IAM \
 		--region $(REGION) \
 		--resolve-s3 \
 		--no-confirm-changeset \
