@@ -18,7 +18,7 @@ build: ## Build the application
 	@echo "Building Java application..."
 	@mvn clean compile -f SearchService/pom.xml
 	@mvn clean compile -f PublicationManagerService/pom.xml
-	@sam build --template-file infrastructure/web-service.yaml
+	@sam build --template-file infrastructure/web-service/template.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 	@echo "Deploying domain resources..."
@@ -35,7 +35,7 @@ deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 deploy-service: build ## Deploy service resources (Lambda, API Gateway, DynamoDB)
 	@echo "Deploying service resources..."
 	@sam deploy \
-		--template-file infrastructure/web-service.yaml \
+		--template-file infrastructure/web-service/template.yaml \
 		--stack-name $(STACK_PREFIX)-web-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
