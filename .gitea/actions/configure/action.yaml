@@ -1,0 +1,46 @@
+name: 'Configure Build Environment'
+description: 'A reusable action that configures the build environment'
+
+runs:
+  using: 'composite'
+  steps:
+    - run: echo "**** Setup Python ****"
+    - name: Setup Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    - run: python --version
+
+    - run: echo "**** Install Python based tooling ****"
+    - name: Install Python based tooling
+      run: pip install cfn-lint cfn-lint-serverless
+
+    - run: echo "**** Setup Java ****"
+    - name: Setup Java
+      uses: actions/setup-java@v5
+      with:
+        distribution: 'corretto'
+        java-version: ${{ env.JAVA_VERSION }}
+    - run: java --version
+
+    - run: echo "**** Setup Maven ****"
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: ${{ env.MAVEN_VERSION }}
+    - run: mvn --version
+
+    - run: echo "**** Install AWS CLI ****"
+    - name: Install AWS CLI
+      run: |
+        curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip -q awscliv2.zip
+        sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update > /dev/null 2>&1
+        aws --version
+
+    - run: echo "**** Install SAM CLI ****"
+    - name: Install SAM CLI
+      uses: aws-actions/setup-sam@v2
+      with:
+        use-installer: true
+    - run: sam --version
