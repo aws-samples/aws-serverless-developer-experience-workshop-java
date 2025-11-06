@@ -239,8 +239,8 @@ jobs:
       
       - name: Run cfn-lint and cfn-lint-serverless
         if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
-        run: cfn-lint contracts-service/template.yaml -a cfn_lint_serverless.rules
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+        run: cfn-lint template.yaml -a cfn_lint_serverless.rules
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/contracts-service
 
       - name: Run ContractsService Unit Tests
         run: mvn test
@@ -249,34 +249,26 @@ jobs:
       - name: Build and Package Contracts Service
         if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
         run: |
-          sam build --template contracts-service/template.yaml
+          sam build
           sam package \
             --config-env dev \
             --output-template-file ".aws-sam/packaged-dev-contracts-service.yaml"
           sam package \
             --config-env prod \
             --output-template-file ".aws-sam/packaged-prod-contracts-service.yaml"
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/contracts-service
 
       - name: Deploy Dev Contracts Service environment
         if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
         run: |
-          sam deploy \
-            --config-env dev \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+          sam deploy --config-env dev
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/contracts-service
 
       - name: Deploy Prod Contracts Service environment
         if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
         run: |
-          sam deploy \
-            --config-env prod \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+          sam deploy --config-env prod
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/contracts-service
 
       - name: Deploy Dev ContractsStatusChanged schema
         if: ${{ needs.changes.outputs.unicorn_contracts_schema_contractstatuschanged == 'true' }}
@@ -352,8 +344,8 @@ jobs:
       
       - name: Run cfn-lint and cfn-lint-serverless
         if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
-        run: cfn-lint approvals-service/template.yaml -a cfn_lint_serverless.rules
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+        run: cfn-lint template.yaml -a cfn_lint_serverless.rules
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/approvals-service
 
       - name: Run ApprovalsService Unit Tests
         run: mvn test
@@ -362,34 +354,26 @@ jobs:
       - name: Build and Package Approvals Service
         if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
         run: |
-          sam build --template approvals-service/template.yaml
+          sam build
           sam package \
             --config-env dev \
             --output-template-file ".aws-sam/packaged-dev-approvals-service.yaml"
           sam package \
             --config-env prod \
             --output-template-file ".aws-sam/packaged-prod-approvals-service.yaml"
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/approvals-service
 
       - name: Deploy Dev Approvals Service environment
         if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
         run: |
-          sam deploy \
-            --config-env dev \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+          sam deploy --config-env dev
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/approvals-service
 
       - name: Deploy Prod Approvals Service environment
         if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
         run: |
-          sam deploy \
-            --config-env prod \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+          sam deploy --config-env prod
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/approvals-service
 
       - name: Deploy Dev PublicationEvaluationCompleted schema
         if: ${{ needs.changes.outputs.unicorn_approvals_schema_publicationevaluationcompleted == 'true' }}
@@ -509,8 +493,8 @@ jobs:
       
       - name: Run cfn-lint and cfn-lint-serverless
         if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: cfn-lint web-service/template.yaml -a cfn_lint_serverless.rules
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+        run: cfn-lint template.yaml -a cfn_lint_serverless.rules
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/web-service
 
       - name: Run Unit Tests
         run: |
@@ -524,8 +508,8 @@ jobs:
         if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
         run: |
           mvn -q clean install
-          cd infrastructure
-          sam build --template web-service/template.yaml
+          cd infrastructure/web-service
+          sam build
           sam package \
             --config-env dev \
             --output-template-file ".aws-sam/packaged-dev-web-service.yaml"
@@ -537,22 +521,14 @@ jobs:
       - name: Deploy Dev Web Service environment
         if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
         run: |
-          sam deploy \
-            --config-env dev \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+          sam deploy --config-env dev
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/web-service
 
       - name: Deploy Prod Web Service environment
         if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
         run: |
-          sam deploy \
-            --config-env prod \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure
+          sam deploy --config-env prod
+        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/infrastructure/web-service
 
       - name: Deploy Dev PublicationApprovalRequested schema
         if: ${{ needs.changes.outputs.unicorn_web_schema_publicationapprovalrequested == 'true' }}
