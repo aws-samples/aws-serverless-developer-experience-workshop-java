@@ -1,9 +1,9 @@
-unicorn_properties/samconfig.toml
-unicorn_properties/PropertyFunctions/target/*
-unicorn_contracts/samconfig.toml
-unicorn_contracts/ContractsFunction/target/**
-unicorn_web/samconfig.toml
-unicorn_web/PropertyFunctions/target/**
+unicorn_approvals/ApprovalsService/target/**
+unicorn_contracts/ContractsService/target/**
+unicorn_web/ApprovalService/target/**
+unicorn_web/SearchService/target/**
+unicorn_web/PublicationManagerService/target/**
+unicorn_web/Common/target/**
 **/.aws-sam/
 .DS_Store**
 .vscode/settings.json
@@ -11,6 +11,10 @@ buildall.sh
 deleteall.sh
 /.idea/**
 /cloudapp.iml
-/unicorn_properties/PropertyFunctions/PropertyService.iml
+/unicorn_approvals/PropertyFunctions/PropertyService.iml
 /unicorn_web/PropertyFunctions/PropertyWeb.iml
 /unicorn_contracts/ContractsFunction/ContractsModule.iml
+**/cdk.out/
+**/dependency-reduced-pom.xml
+.idea
+.kiro

@@ -1,36 +1,32 @@
-![AWS Serverless Developer Experience Workshop Reference Architecture](/docs/workshop_logo.png)
+[![Build & Test Workflow](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-java/actions/workflows/build.yml/badge.svg)](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-java/actions/workflows/build.yml)
 
 # AWS Serverless Developer Experience workshop reference architecture (Java)
 
-This repository contains the reference architecture for the AWS Serverless Developer Experience workshop.
+<img src="./docs/workshop_logo.png" alt="AWS Serverless Developer Experience Workshop Reference Architecture" width="80%" />
 
-The AWS Serverless Developer Experience workshop provides you with an immersive experience of a serverless developer. The goal is to provide you with an hands-on experience building a serverless solution using the [AWS Serverless Application Model (AWS SAM)](https://aws.amazon.com/serverless/sam/) and AWS SAM CLI.
+This repository contains the Java reference architecture for the AWS Serverless Developer Experience workshop.
 
-Along the way, we want to demonstrate principles of event-driven distributed architecture, orchestration, and serverless observability, and how to apply them in code.
+The AWS Serverless Developer Experience Workshop is a comprehensive, hands-on training program designed to equip developers with practical serverless development skills using the [**AWS Serverless Application Model (AWS SAM)**](https://aws.amazon.com/serverless/sam/) and **AWS SAM CLI**.
 
-We'll also explore open-source tools, core features of AWS Lambda Powertools, and serverless CI/CD deployments. You can choose choose to run this workshop in a runtime of your choice — Python, TypeScript, Java, and .NET — and work with your own developer setup or use AWS Cloud9 to build the services.
+The workshop employs a practical, code-centric approach, emphasizing direct implementation and real-world scenario exploration to ensure you develop serverless development skills across several critical areas including distributed event-driven architectures, messaging patterns, orchestration, and observability. You will explore open-source tools, [Powertools for AWS](https://powertools.aws.dev/), and simplified CI/CD deployments with AWS SAM Pipelines. By the end, you will be familiar with serverless developer workflows, microservice composition using AWS SAM, serverless development best practices, and applied event-driven architectures.
 
-This workshop will take approximately 4 hours to complete. We are assuming that you have some practical development skills in one of the supported runtimes, and are familiar with some of the services that we will use in this solution which include: [Amazon API Gateway](https://aws.amazon.com/apigateway/), [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon EventBridge](https://aws.amazon.com/eventbridge/), [AWS Step Functions](https://aws.amazon.com/step-functions/) and [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
+The 6-8 hour workshop assumes your practical development skills in Python, TypeScript, Java, or .NET, and familiarity with [Amazon API Gateway](https://aws.amazon.com/apigateway/), [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon EventBridge](https://aws.amazon.com/eventbridge/), [AWS Step Functions](https://aws.amazon.com/step-functions/), and [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
 
-## About the Architecture
+## Introducing the Unicorn Properties architecture
 
-![AWS Serverless Developer Experience Workshop Reference Architecture](/docs/architecture.png)
+![AWS Serverless Developer Experience Workshop Reference Architecture](./docs/architecture.png)
 
-Our use case is based on a real estate company called **Unicorn Properties**.
+Real estate company **Unicorn Properties** needs to manage publishing of new property listings and sale contracts linked to individual properties, and provide a way for customers to view approved listings. They adopted a serverless, event-driven architecture with two primary domains: **Contracts** (managed by the Contracts Service) and **Properties** (managed by the Web and Approvals Services).
 
-As a real estate agency, **Unicorn Properties** needs to manage the publishing of new property listings and sale contracts linked to individual properties, and provide a way for their customers to view approved property listings.
+**Unicorn Contracts** (using the `Unicorn.Contracts` namespace) service manages contractual relationships between property sellers and Unicorn Approvals, defining properties for sale, terms, and engagement costs.
 
-To support their needs, Unicorn Properties have adopted a serverless, event-driven approach to designing their architecture. This architecture is centred around two primary domains: boundaries–Contracts (managed by the Contracts Service) and Properties (which are managed by the Properties Web and Properties Services).
+**Unicorn Approvals** (using the `Unicorn.Approvals` namespace) service approves property listings by implementing a workflow that checks for contract existence, content and image safety, and contract approval before publishing.
 
-The **Contracts Service** is a simplified service that manages the contractual relationship between a seller of a property and Unicorn Properties. Contracts are drawn up that define the property for sale, the terms and conditions that Unicorn Properties sets, and how much it will cost the seller to engage the services of the agency.
-
-The **Properties Web** service manages the details of a property listing to be published on the Unicorn Properties website. Every property listing has an address, a sale price, a description of the property, and some photos that members of the public can look at to get them interested in purchasing the property. **Only properties that have been approved for publication can be made visible to the public**.
-
-The **Properties Service** approves a listing. This service implements a workflow that checks for the existence of a contract, makes sure that the content and the images are safe to publish, and finally checks that the contract has been approved. We don’t want to publish a property until we have an approved contract!
+**Unicorn Web** (using the `Unicorn.Web` namespace) manages property listing details (address, sale price, description, photos) to be published on the website, with only approved listings visible to the public.
 
 ## Credits
 
-Throughout this workshop we wanted to introduce you to some Open Source tools that can help you build serverless applications. This is not an exhaustive list, just a small selection of what we will be using in the workshop.
+This workshop introduces you to some open-source tools that can help you build serverless applications. This is not an exhaustive list, but a small selection of what you will be using in the workshop.
 
 Many thanks to all the AWS teams and community builders who have contributed to this list:
 
