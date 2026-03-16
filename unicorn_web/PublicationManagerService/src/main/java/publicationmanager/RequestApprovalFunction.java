@@ -37,6 +37,9 @@ import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequestEntry;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.FlushMetrics;
+import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.MetricsFactory;
+import software.amazon.lambda.powertools.metrics.model.MetricUnit;
 import software.amazon.lambda.powertools.tracing.Tracing;
 
 /**
@@ -48,6 +51,8 @@ public class RequestApprovalFunction {
     private static final Set<String> NO_ACTION_STATUSES = new HashSet<>(Arrays.asList("APPROVED"));
     private static final String PROPERTY_ID_PATTERN = "[a-z-]+\\/[a-z-]+\\/[a-z][a-z0-9-]*\\/[0-9-]+";
     
+    private static final String SERVICE_NAMESPACE = System.getenv("SERVICE_NAMESPACE");
+
     private final Pattern propertyIdPattern = Pattern.compile(PROPERTY_ID_PATTERN);
     private final String tableName = System.getenv("DYNAMODB_TABLE");
     private final String eventBus = System.getenv("EVENT_BUS");
@@ -188,19 +193,25 @@ public class RequestApprovalFunction {
         
         RequestApproval event = new RequestApproval();
         event.setPropertyId(property.getId());
-        
+
         Address address = new Address();
         address.setCity(property.getCity());
         address.setCountry(property.getCountry());
         address.setNumber(property.getPropertyNumber());
         event.setAddress(address);
 
+        event.setStatus("PENDING");
+        event.setListprice(property.getListprice());
+        event.setImages(property.getImages());
+        event.setDescription(property.getDescription());
+        event.setCurrency(property.getCurrency());
+
         String eventString = objectMapper.writeValueAsString(event);
         logger.info("Event payload created: {}", eventString);
 
         PutEventsRequestEntry requestEntry = PutEventsRequestEntry.builder()
                 .eventBusName(eventBus)
-                .source("Unicorn.Web")
+                .source(SERVICE_NAMESPACE)
                 .resources(property.getId())
                 .detailType("PublicationApprovalRequested")
                 .detail(eventString)
@@ -213,9 +224,10 @@ public class RequestApprovalFunction {
         logger.debug("Sending event to EventBridge bus: {}", eventBus);
         try {
             eventBridgeClient.putEvents(eventsRequest).join();
+            MetricsFactory.getMetricsInstance().addMetric("ApprovalsRequested", 1, MetricUnit.COUNT);
             logger.info("Event sent successfully for property: {}", property.getId());
         } catch (Exception e) {
-            logger.error("Failed to send event to EventBridge for property: {}, bus: {}", 
+            logger.error("Failed to send event to EventBridge for property: {}, bus: {}",
                         property.getId(), eventBus, e);
             throw e;
         }
@@ -226,6 +238,21 @@ class RequestApproval {
     @JsonProperty("property_id")
     String propertyId;
     Address address;
+
+    @JsonProperty("status")
+    String status;
+
+    @JsonProperty("listprice")
+    Float listprice;
+
+    @JsonProperty("images")
+    java.util.List<String> images;
+
+    @JsonProperty("description")
+    String description;
+
+    @JsonProperty("currency")
+    String currency;
 
     public String getPropertyId() {
         return propertyId;
@@ -241,6 +268,46 @@ class RequestApproval {
 
     public void setAddress(Address address) {
         this.address = address;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Float getListprice() {
+        return listprice;
+    }
+
+    public void setListprice(Float listprice) {
+        this.listprice = listprice;
+    }
+
+    public java.util.List<String> getImages() {
+        return images;
+    }
+
+    public void setImages(java.util.List<String> images) {
+        this.images = images;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 }
 
