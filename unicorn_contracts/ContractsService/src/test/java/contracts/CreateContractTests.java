@@ -28,11 +28,11 @@ public class CreateContractTests {
     @Mock
     private DynamoDbClient dynamoDbClient;
     
-    private ContractEventHandler handler;
+    private ContractEventHandlerFunction handler;
 
     @Before
     public void setUp() {
-        handler = new ContractEventHandler(dynamoDbClient);
+        handler = new ContractEventHandlerFunction(dynamoDbClient);
     }
 
     @Test
