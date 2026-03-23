@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "test-update-001",
+      "body": "{ \"property_id\": \"usa/anytown/main-street/123\" }",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1545082649183"
+      },
+      "messageAttributes": {
+        "HttpMethod": {
+          "Type": "String",
+          "Value": "PUT"
+        }
+      },
+      "eventSource": "aws:sqs",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

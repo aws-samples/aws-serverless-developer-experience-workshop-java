@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "test-malformed-001",
+      "body": "{ this is not valid json }",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1545082649183"
+      },
+      "messageAttributes": {
+        "HttpMethod": {
+          "Type": "String",
+          "Value": "POST"
+        }
+      },
+      "eventSource": "aws:sqs",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

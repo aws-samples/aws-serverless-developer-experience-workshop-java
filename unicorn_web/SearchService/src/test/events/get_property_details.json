@@ -1,0 +1,10 @@
+{
+  "httpMethod": "GET",
+  "resource": "/properties/{country}/{city}/{street}/{number}",
+  "pathParameters": {
+    "country": "usa",
+    "city": "anytown",
+    "street": "main-street",
+    "number": "123"
+  }
+}
