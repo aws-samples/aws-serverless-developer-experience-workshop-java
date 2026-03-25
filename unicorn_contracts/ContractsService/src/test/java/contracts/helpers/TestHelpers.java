@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.MessageAttribute;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -14,6 +15,21 @@ public final class TestHelpers {
 
     private TestHelpers() {
         // Utility class
+    }
+
+    /**
+     * Loads a JSON event file from src/test/events/ and returns its content as a String.
+     *
+     * @param name the file name without extension (e.g. "create_contract_valid_1")
+     * @return the file content as a String
+     */
+    public static String loadEvent(String name) {
+        String path = "src/test/events/" + name + ".json";
+        try {
+            return java.nio.file.Files.readString(java.nio.file.Path.of(path));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read event file: " + path, e);
+        }
     }
 
     /**
