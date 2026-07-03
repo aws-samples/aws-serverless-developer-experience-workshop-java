@@ -10,14 +10,14 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <aws.java.sdk.version>2.42.13</aws.java.sdk.version>
-        <aws.java.powertool.version>2.9.0</aws.java.powertool.version>
+        <aws.java.sdk.version>2.46.21</aws.java.sdk.version>
+        <aws.java.powertool.version>2.10.0</aws.java.powertool.version>
         <aws-lambda-java-events.version>3.16.1</aws-lambda-java-events.version>
         <mockito-core.version>5.23.0</mockito-core.version>
         <junit.version>4.13.2</junit.version>
         <aws-lambda-java-tests.version>1.1.2</aws-lambda-java-tests.version>
         <aws-lambda-java-core.version>1.4.0</aws-lambda-java-core.version>
-        <netty-nio-client.version>2.42.13</netty-nio-client.version>
+        <netty-nio-client.version>2.46.21</netty-nio-client.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -136,29 +136,29 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.18.6</version>
+            <version>2.22.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.18.6</version>
+            <version>2.22.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.18.6</version>
+            <version>2.22</version>
         </dependency>
 
         <!-- Log4j -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.25.3</version>
+            <version>2.26.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.25.3</version>
+            <version>2.26.1</version>
         </dependency>
         <dependency>
             <groupId>common</groupId>
