@@ -13,28 +13,31 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import software.amazon.lambda.powertools.metrics.FlushMetrics;
+import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.MetricsFactory;
+import software.amazon.lambda.powertools.metrics.model.MetricUnit;
+import software.amazon.lambda.powertools.tracing.Tracing;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
+public class ContractEventHandlerFunction implements RequestHandler<SQSEvent, Void> {
 
     private static final String DDB_TABLE = System.getenv("DYNAMODB_TABLE");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Logger LOGGER = LogManager.getLogger(ContractEventHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger(ContractEventHandlerFunction.class);
     private static final String HTTP_METHOD_ATTR = "HttpMethod";
 
     private final DynamoDbClient dynamodbClient;
 
-    public ContractEventHandler() {
+    public ContractEventHandlerFunction() {
         this(DynamoDbClient.builder().build());
     }
 
-    public ContractEventHandler(DynamoDbClient dynamodbClient) {
+    public ContractEventHandlerFunction(DynamoDbClient dynamodbClient) {
         this.dynamodbClient = dynamodbClient;
     }
 
@@ -56,11 +59,11 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
 
     private void processMessage(SQSMessage msg) {
         LOGGER.debug("Processing message: {}", msg.getMessageId());
-        
+
         try {
             String httpMethod = extractHttpMethod(msg);
             String body = msg.getBody();
-            
+
             if (body == null || body.trim().isEmpty()) {
                 LOGGER.warn("Empty message body for message: {}", msg.getMessageId());
                 return;
@@ -95,15 +98,15 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
     private void createContract(String contractJson) throws JsonProcessingException {
         Contract contract = OBJECT_MAPPER.readValue(contractJson, Contract.class);
         validateContract(contract);
-        
+
         String contractId = UUID.randomUUID().toString();
-        long timestamp = Instant.now().toEpochMilli();
+        String timestamp = Instant.now().toString();
 
         Map<String, AttributeValue> item = Map.of(
             "property_id", AttributeValue.builder().s(contract.getPropertyId()).build(),
             "seller_name", AttributeValue.builder().s(contract.getSellerName()).build(),
-            "contract_created", AttributeValue.builder().n(String.valueOf(timestamp)).build(),
-            "contract_last_modified_on", AttributeValue.builder().n(String.valueOf(timestamp)).build(),
+            "contract_created", AttributeValue.builder().s(timestamp).build(),
+            "contract_last_modified_on", AttributeValue.builder().s(timestamp).build(),
             "contract_id", AttributeValue.builder().s(contractId).build(),
             "contract_status", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build(),
             "address", AttributeValue.builder().m(buildAddressMap(contract.getAddress())).build()
@@ -124,6 +127,7 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
 
         try {
             dynamodbClient.putItem(request);
+            MetricsFactory.getMetricsInstance().addMetric("ContractCreated", 1, MetricUnit.COUNT);
         } catch (ConditionalCheckFailedException e) {
             LOGGER.error("Active contract already exists for property: {}", contract.getPropertyId());
             throw new IllegalStateException("Contract already exists for property: " + contract.getPropertyId(), e);
@@ -134,7 +138,7 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
     private void updateContract(String contractJson) throws JsonProcessingException {
         Contract contract = OBJECT_MAPPER.readValue(contractJson, Contract.class);
         validateContractForUpdate(contract);
-        
+
         LOGGER.info("Updating contract for Property ID: {}", contract.getPropertyId());
 
         Map<String, AttributeValue> key = Map.of(
@@ -144,7 +148,7 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
         Map<String, AttributeValue> expressionValues = Map.of(
             ":draft", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build(),
             ":approved", AttributeValue.builder().s(ContractStatusEnum.APPROVED.name()).build(),
-            ":modifiedDate", AttributeValue.builder().n(String.valueOf(Instant.now().toEpochMilli())).build()
+            ":modifiedDate", AttributeValue.builder().s(Instant.now().toString()).build()
         );
 
         UpdateItemRequest request = UpdateItemRequest.builder()
@@ -157,6 +161,7 @@ public class ContractEventHandler implements RequestHandler<SQSEvent, Void> {
 
         try {
             dynamodbClient.updateItem(request);
+            MetricsFactory.getMetricsInstance().addMetric("ContractUpdated", 1, MetricUnit.COUNT);
         } catch (ConditionalCheckFailedException e) {
             LOGGER.error("Contract not in DRAFT status for property: {}", contract.getPropertyId());
             throw new IllegalStateException("Contract not in valid state for update: " + contract.getPropertyId(), e);

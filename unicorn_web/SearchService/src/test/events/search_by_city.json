@@ -1,0 +1,8 @@
+{
+  "httpMethod": "GET",
+  "resource": "/search/{country}/{city}",
+  "pathParameters": {
+    "country": "usa",
+    "city": "anytown"
+  }
+}

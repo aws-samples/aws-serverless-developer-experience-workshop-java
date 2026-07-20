@@ -28,11 +28,11 @@ public class Contract {
     
     @JsonProperty("contract_created")
     @JsonAlias("contract_created")
-    private Long contractCreated;
-    
+    private String contractCreated;
+
     @JsonProperty("contract_last_modified_on")
     @JsonAlias("contract_last_modified_on")
-    private Long contractLastModifiedOn;
+    private String contractLastModifiedOn;
 
     public Contract() {}
 
@@ -76,19 +76,19 @@ public class Contract {
         this.contractStatus = contractStatus;
     }
 
-    public Long getContractCreated() {
+    public String getContractCreated() {
         return contractCreated;
     }
 
-    public void setContractCreated(Long contractCreated) {
+    public void setContractCreated(String contractCreated) {
         this.contractCreated = contractCreated;
     }
 
-    public Long getContractLastModifiedOn() {
+    public String getContractLastModifiedOn() {
         return contractLastModifiedOn;
     }
 
-    public void setContractLastModifiedOn(Long contractLastModifiedOn) {
+    public void setContractLastModifiedOn(String contractLastModifiedOn) {
         this.contractLastModifiedOn = contractLastModifiedOn;
     }
 

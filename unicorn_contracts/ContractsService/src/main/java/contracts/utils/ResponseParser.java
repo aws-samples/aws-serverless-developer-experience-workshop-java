@@ -33,7 +33,6 @@ public class ResponseParser {
         // Parse other fields
         Optional.ofNullable(queryResponse.get("contract_created"))
                 .map(AttributeValue::s)
-                .map(Long::valueOf)
                 .ifPresent(contract::setContractCreated);
 
         Optional.ofNullable(queryResponse.get("contract_id"))
@@ -42,7 +41,6 @@ public class ResponseParser {
 
         Optional.ofNullable(queryResponse.get("contract_last_modified_on"))
                 .map(AttributeValue::s)
-                .map(Long::valueOf)
                 .ifPresent(contract::setContractLastModifiedOn);
 
         Optional.ofNullable(queryResponse.get("contract_status"))
