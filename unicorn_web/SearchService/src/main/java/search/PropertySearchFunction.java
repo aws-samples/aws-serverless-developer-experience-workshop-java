@@ -91,7 +91,7 @@ public class PropertySearchFunction
     }
 
     private String buildPartitionKey(String country, String city) {
-        return ("PROPERTY#" + country + "#" + city).replace(' ', '-');
+        return ("PROPERTY#" + country.toLowerCase() + "#" + city.toLowerCase()).replace(' ', '-');
     }
 
     private String buildSortKey(String resource, Map<String, String> pathParams) {
