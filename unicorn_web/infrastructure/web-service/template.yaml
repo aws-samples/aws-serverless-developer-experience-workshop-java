@@ -128,7 +128,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ../../PublicationManagerService
-      Handler: publicationmanager.PublicationEvaluationEventHandlerFunction::handleRequest
+      Handler: publicationmanager.PublicationEvaluationEventHandler::handleRequest
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PropertiesTable
