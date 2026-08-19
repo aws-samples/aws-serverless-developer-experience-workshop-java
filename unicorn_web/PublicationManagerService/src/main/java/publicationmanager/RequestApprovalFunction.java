@@ -197,14 +197,13 @@ public class RequestApprovalFunction {
         Address address = new Address();
         address.setCity(property.getCity());
         address.setCountry(property.getCountry());
+        address.setStreet(property.getStreet());
         address.setNumber(property.getPropertyNumber());
         event.setAddress(address);
 
         event.setStatus("PENDING");
-        event.setListprice(property.getListprice());
         event.setImages(property.getImages());
         event.setDescription(property.getDescription());
-        event.setCurrency(property.getCurrency());
 
         String eventString = objectMapper.writeValueAsString(event);
         logger.info("Event payload created: {}", eventString);
@@ -242,17 +241,11 @@ class RequestApproval {
     @JsonProperty("status")
     String status;
 
-    @JsonProperty("listprice")
-    Float listprice;
-
     @JsonProperty("images")
     java.util.List<String> images;
 
     @JsonProperty("description")
     String description;
-
-    @JsonProperty("currency")
-    String currency;
 
     public String getPropertyId() {
         return propertyId;
@@ -278,14 +271,6 @@ class RequestApproval {
         this.status = status;
     }
 
-    public Float getListprice() {
-        return listprice;
-    }
-
-    public void setListprice(Float listprice) {
-        this.listprice = listprice;
-    }
-
     public java.util.List<String> getImages() {
         return images;
     }
@@ -301,20 +286,12 @@ class RequestApproval {
     public void setDescription(String description) {
         this.description = description;
     }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
 }
 
 class Address {
     String country;
     String city;
-    String state;
+    String street;
     String number;
 
     public String getCountry() {
@@ -333,12 +310,12 @@ class Address {
         this.city = city;
     }
 
-    public String getState() {
-        return state;
+    public String getStreet() {
+        return street;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setStreet(String street) {
+        this.street = street;
     }
 
     public String getNumber() {
