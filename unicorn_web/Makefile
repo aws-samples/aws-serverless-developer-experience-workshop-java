@@ -35,7 +35,6 @@ deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 deploy-service: build ## Deploy service resources (Lambda, API Gateway, DynamoDB)
 	@echo "Deploying service resources..."
 	@sam deploy \
-		--template-file infrastructure/web-service/template.yaml \
 		--stack-name $(STACK_PREFIX)-web-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
