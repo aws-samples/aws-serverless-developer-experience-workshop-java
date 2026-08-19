@@ -61,7 +61,7 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint infrastructure/contracts-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint infrastructure/contracts-service/template.yaml -a cfn_lint_serverless.rules
 	@cfn-lint infrastructure/domain.yaml
 	@cfn-lint infrastructure/schema-registry/ContractStatusChanged-schema.yaml
 

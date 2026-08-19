@@ -74,7 +74,7 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint infrastructure/web-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint infrastructure/web-service/template.yaml -a cfn_lint_serverless.rules
 	@cfn-lint infrastructure/domain.yaml
 	@cfn-lint infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
 	@cfn-lint infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml
