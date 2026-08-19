@@ -331,10 +331,10 @@ Resources:
           Source: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
         InputTemplate: |-
           {
-            "PropertyId": "<$.dynamodb.Keys.PropertyId.S>",
-            "ContractId": "<$.dynamodb.NewImage.ContractId.S>",
-            "ContractStatus": "<$.dynamodb.NewImage.ContractStatus.S>",
-            "ContractLastModifiedOn": "<$.dynamodb.NewImage.ContractLastModifiedOn.S>"
+            "property_id": "<$.dynamodb.Keys.property_id.S>",
+            "contract_id": "<$.dynamodb.NewImage.contract_id.S>",
+            "contract_status": "<$.dynamodb.NewImage.contract_status.S>",
+            "contract_last_modified_on": "<$.dynamodb.NewImage.contract_last_modified_on.S>"
           }
       Target: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ContractsEventBusArn}}"
 
