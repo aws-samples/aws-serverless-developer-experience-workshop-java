@@ -73,7 +73,7 @@ jobs:
     env:
       SERVICE_FOLDER: "unicorn_contracts"
       PYTHON_VERSION: "3.12"
-      JAVA_VERSION: "21"
+      JAVA_VERSION: "25"
       MAVEN_VERSION: "3.9.11"
     steps:
       - uses: actions/checkout@v5
@@ -114,7 +114,7 @@ jobs:
     env:
       SERVICE_FOLDER: "unicorn_approvals"
       PYTHON_VERSION: "3.12"
-      JAVA_VERSION: "21"
+      JAVA_VERSION: "25"
       MAVEN_VERSION: "3.9.11"
     steps:
       - uses: actions/checkout@v5
@@ -155,7 +155,7 @@ jobs:
     env:
       SERVICE_FOLDER: "unicorn_web"
       PYTHON_VERSION: "3.12"
-      JAVA_VERSION: "21"
+      JAVA_VERSION: "25"
       MAVEN_VERSION: "3.9.11"
     steps:
       - uses: actions/checkout@v5
@@ -197,7 +197,7 @@ jobs:
     env:
       SERVICE_FOLDER: "unicorn_contracts"
       PYTHON_VERSION: "3.12"
-      JAVA_VERSION: "21"
+      JAVA_VERSION: "25"
       MAVEN_VERSION: "3.9.11"
     steps:
       - uses: actions/checkout@v5
@@ -302,7 +302,7 @@ jobs:
     env:
       SERVICE_FOLDER: "unicorn_approvals"
       PYTHON_VERSION: "3.12"
-      JAVA_VERSION: "21"
+      JAVA_VERSION: "25"
       MAVEN_VERSION: "3.9.11"
     steps:
       - uses: actions/checkout@v5
@@ -451,7 +451,7 @@ jobs:
     env:
       SERVICE_FOLDER: "unicorn_web"
       PYTHON_VERSION: "3.12"
-      JAVA_VERSION: "21"
+      JAVA_VERSION: "25"
       MAVEN_VERSION: "3.9.11"
     steps:
       - uses: actions/checkout@v5

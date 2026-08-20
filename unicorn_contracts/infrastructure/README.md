@@ -74,7 +74,7 @@ Note: This template provides the foundation for event-driven integrations for al
 #### Lambda Functions
 
 - **ContractEventHandlerFunction**: Processes contract requests from SQS queue
-  - Runtime: Java 21
+  - Runtime: Java 25
   - Memory: 512MB, Timeout: 15s
   - Integrated with AWS Powertools for observability
 

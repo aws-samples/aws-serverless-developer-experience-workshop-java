@@ -44,7 +44,7 @@ Globals:
   Api:
     OpenApiVersion: 3.0.1
   Function:
-    Runtime: java21
+    Runtime: java25
     MemorySize: 512
     Timeout: 15
     Tracing: Active
