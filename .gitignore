@@ -56,8 +56,9 @@ terraform.rc
 !**/envs/*.tfvars
 
 ### AI Tools ###
-# Kiro
-.kiro/
+# Kiro (steering is tracked; other .kiro content stays local)
+.kiro/*
+!.kiro/steering/
 
 # Claude
 .claude/
