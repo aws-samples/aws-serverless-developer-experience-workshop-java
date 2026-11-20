@@ -38,11 +38,16 @@ make deploy-schema          # Event schema stack(s)
 make deploy-service         # Lambda, API Gateway, DynamoDB (service template)
 make test                   # Run tests (mvn test)
 make lint                   # cfn-lint all infrastructure templates
+make ci                     # Everything CI runs: lint, build, test (no AWS credentials)
 make clean                  # Clean build artifacts
 make delete                 # Delete stacks in reverse dependency order
 ```
 
 `unicorn_shared/` has its own targets for namespaces and shared images stacks. Deploy shared namespaces before any service.
+
+### Before you open a pull request
+
+Run `make ci` in every service directory you changed. It runs exactly the checks the `Build` GitHub Actions workflow runs for that service: cfn-lint, `mvn` compile and `sam build`, then the JUnit tests. It needs no AWS credentials or AWS access. The `Build / <service>` check on the pull request runs the same command.
 
 ### Runtime Commands
 

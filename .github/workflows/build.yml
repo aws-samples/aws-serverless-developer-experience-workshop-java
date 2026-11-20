@@ -1,44 +1,65 @@
-name: Build Java
+name: Build
 
+# Runs the same checks as `make ci` in each service folder. Every job reports a
+# result on every push and pull request, so the jobs can be required checks.
 on:
   push:
     branches: [develop, main]
-    paths:
-      - 'unicorn_contracts/**'
-      - 'unicorn_approvals/**'
-      - 'unicorn_web/**'
   pull_request:
     branches: [develop, main]
-    paths:
-      - 'unicorn_contracts/**'
-      - 'unicorn_approvals/**'
-      - 'unicorn_web/**'
 
-defaults:
-  run:
-    working-directory: ./
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    name: ${{ matrix.service }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     strategy:
-      max-parallel: 4
+      fail-fast: false
       matrix:
-        # test against latest LTS Java versions
-        java: [25]
-    name: Java ${{ matrix.java }}
-    env:
-      JAVA: ${{ matrix.java }}
-      AWS_REGION: us-west-2
+        include:
+          - service: contracts
+            directory: unicorn_contracts
+          - service: approvals
+            directory: unicorn_approvals
+          - service: web
+            directory: unicorn_web
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          distribution: 'temurin'
-          java-version: ${{ matrix.java }}
+          persist-credentials: false
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install cfn-lint
+        run: python -m pip install cfn-lint==1.61.0 cfn-lint-serverless==0.3.6
+
+      - name: Set up AWS SAM CLI
+        uses: aws-actions/setup-sam@341eee193f458fa5aae5d52c94b0c5cf3a1c5a52 # v3
+        with:
+          use-installer: true
+          version: 1.174.0
+
+      - name: Set up Java 25
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "25"
           cache: maven
-          cache-dependency-path: '**/pom.xml'
-      - name: Build with Maven
-        run: mvn compile test
+          cache-dependency-path: "**/pom.xml"
+
+      - name: Run CI checks
+        run: make ci
