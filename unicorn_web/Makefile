@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test lint clean delete
+.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test lint clean delete ci
 
 help: ## Show available commands
 	@echo "Unicorn Web Service Infrastructure"
@@ -16,8 +16,9 @@ help: ## Show available commands
 
 build: ## Build the application
 	@echo "Building Java application..."
-	@mvn clean compile -f SearchService/pom.xml
-	@mvn clean compile -f PublicationManagerService/pom.xml
+	@# Build through the parent POM so Common is built and installed for SearchService,
+	@# PublicationManagerService, and sam build to resolve.
+	@mvn clean install -DskipTests -f pom.xml
 	@sam build --template-file infrastructure/web-service/template.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
@@ -69,8 +70,7 @@ deploy: deploy-domain deploy-service deploy-schema deploy-subscriptions ## Deplo
 
 test: ## Run tests
 	@echo "Running tests..."
-	@mvn test -f SearchService/pom.xml
-	@mvn test -f PublicationManagerService/pom.xml
+	@mvn test -f pom.xml
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
@@ -78,6 +78,11 @@ lint: ## Lint CloudFormation templates
 	@cfn-lint infrastructure/domain.yaml
 	@cfn-lint infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
 	@cfn-lint infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml
+
+# The AWS SDK clients need a region even in unit tests; credentials are never needed.
+ci: export AWS_REGION ?= $(REGION)
+ci: export AWS_DEFAULT_REGION ?= $(REGION)
+ci: lint build test ## Run the same checks as CI (lint, build, test); needs no AWS credentials
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."

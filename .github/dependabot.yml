@@ -1,0 +1,33 @@
+# Same schedule and grouping in all four workshop repositories.
+# Minor and patch updates arrive as one grouped pull request per ecosystem;
+# major updates arrive individually so breaking changes can be reviewed.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      github-actions-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "maven"
+    directories:
+      - "/unicorn_contracts/ContractsService"
+      - "/unicorn_approvals/ApprovalsService"
+      - "/unicorn_web"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      maven-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
