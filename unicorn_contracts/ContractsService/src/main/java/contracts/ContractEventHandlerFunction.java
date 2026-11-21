@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import contracts.utils.Contract;
 import contracts.utils.ContractStatusEnum;
+import contracts.utils.ContractTimestamp;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -19,7 +20,6 @@ import software.amazon.lambda.powertools.metrics.MetricsFactory;
 import software.amazon.lambda.powertools.metrics.model.MetricUnit;
 import software.amazon.lambda.powertools.tracing.Tracing;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -100,7 +100,8 @@ public class ContractEventHandlerFunction implements RequestHandler<SQSEvent, Vo
         validateContract(contract);
 
         String contractId = UUID.randomUUID().toString();
-        String timestamp = Instant.now().toString();
+        // One clock reading, so a new contract's two timestamps are identical
+        String timestamp = ContractTimestamp.now();
 
         Map<String, AttributeValue> item = Map.of(
             "property_id", AttributeValue.builder().s(contract.getPropertyId()).build(),
@@ -148,7 +149,7 @@ public class ContractEventHandlerFunction implements RequestHandler<SQSEvent, Vo
         Map<String, AttributeValue> expressionValues = Map.of(
             ":draft", AttributeValue.builder().s(ContractStatusEnum.DRAFT.name()).build(),
             ":approved", AttributeValue.builder().s(ContractStatusEnum.APPROVED.name()).build(),
-            ":modifiedDate", AttributeValue.builder().s(Instant.now().toString()).build()
+            ":modifiedDate", AttributeValue.builder().s(ContractTimestamp.now()).build()
         );
 
         UpdateItemRequest request = UpdateItemRequest.builder()

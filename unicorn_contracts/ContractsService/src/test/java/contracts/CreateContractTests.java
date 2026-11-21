@@ -6,6 +6,7 @@ import contracts.helpers.TestHelpers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -16,6 +17,8 @@ import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -28,6 +31,9 @@ public class CreateContractTests {
 
     @Mock
     private DynamoDbClient dynamoDbClient;
+
+    // yyyy-MM-ddTHH:mm:ssZ: UTC, whole seconds, literal Z (20 characters)
+    private static final String TIMESTAMP_PATTERN = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$";
 
     private ContractEventHandlerFunction handler;
 
@@ -49,7 +55,15 @@ public class CreateContractTests {
         handler.handleRequest(event, context);
 
         // Then
-        verify(dynamoDbClient, times(1)).putItem(any(PutItemRequest.class));
+        ArgumentCaptor<PutItemRequest> captor = ArgumentCaptor.forClass(PutItemRequest.class);
+        verify(dynamoDbClient, times(1)).putItem(captor.capture());
+
+        String created = captor.getValue().item().get("contract_created").s();
+        String lastModified = captor.getValue().item().get("contract_last_modified_on").s();
+        assertTrue(created.matches(TIMESTAMP_PATTERN), "contract_created was " + created);
+        assertTrue(lastModified.matches(TIMESTAMP_PATTERN), "contract_last_modified_on was " + lastModified);
+        // A new contract has one creation instant
+        assertEquals(created, lastModified);
     }
 
     @Test
@@ -65,8 +79,12 @@ public class CreateContractTests {
         handler.handleRequest(event, context);
 
         // Then
-        verify(dynamoDbClient, times(1)).updateItem(any(UpdateItemRequest.class));
+        ArgumentCaptor<UpdateItemRequest> captor = ArgumentCaptor.forClass(UpdateItemRequest.class);
+        verify(dynamoDbClient, times(1)).updateItem(captor.capture());
         verify(dynamoDbClient, never()).putItem(any(PutItemRequest.class));
+
+        String modified = captor.getValue().expressionAttributeValues().get(":modifiedDate").s();
+        assertTrue(modified.matches(TIMESTAMP_PATTERN), ":modifiedDate was " + modified);
     }
 
     @Test

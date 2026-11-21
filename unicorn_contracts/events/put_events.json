@@ -1,13 +1,13 @@
 [
   {
     "Source": "Unicorn.Contracts",
-    "Detail": "{\"contract_updated_on\":\"10/08/2022 20:36:30\",\"contract_id\": 111,\"property_id\":\"aaa\",\"contract_status\":\"DRAFT\"}",
+    "Detail": "{\"contract_last_modified_on\":\"2022-08-10T20:36:30Z\",\"contract_id\": 111,\"property_id\":\"aaa\",\"contract_status\":\"DRAFT\"}",
     "DetailType": "ContractStatusChanged",
     "EventBusName": "Dev-UnicornApprovalsEventBus"
   },
   {
     "Source": "Unicorn.Contracts",
-    "Detail": "{\"contract_updated_on\":\"10/08/2022 19:56:30\",\"contract_id\":222,\"property_id\":\"bbb\",\"contract_status\":\"DRAFT\"}",
+    "Detail": "{\"contract_last_modified_on\":\"2022-08-10T19:56:30Z\",\"contract_id\":222,\"property_id\":\"bbb\",\"contract_status\":\"DRAFT\"}",
     "DetailType": "ContractStatusChanged",
     "EventBusName": "Dev-UnicornApprovalsEventBus"
   }
