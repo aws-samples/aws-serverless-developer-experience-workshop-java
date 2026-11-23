@@ -38,6 +38,7 @@ make deploy-schema          # Event schema stack(s)
 make deploy-service         # Lambda, API Gateway, DynamoDB (service template)
 make test                   # Run tests (mvn test)
 make lint                   # cfn-lint all infrastructure templates
+make format                 # Spotless with google-java-format, AOSP style (Java)
 make ci                     # Everything CI runs: lint, build, test (no AWS credentials)
 make clean                  # Clean build artifacts
 make delete                 # Delete stacks in reverse dependency order
