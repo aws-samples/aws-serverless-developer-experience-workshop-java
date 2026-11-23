@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test lint clean delete ci
+.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test lint format clean delete ci
 
 help: ## Show available commands
 	@echo "Unicorn Web Service Infrastructure"
@@ -78,6 +78,12 @@ lint: ## Lint CloudFormation templates
 	@cfn-lint infrastructure/domain.yaml
 	@cfn-lint infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
 	@cfn-lint infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml
+
+format: ## Format Java code (Spotless, google-java-format AOSP style)
+	@echo "Formatting Java code..."
+	@mvn spotless:apply -f Common/pom.xml
+	@mvn spotless:apply -f PublicationManagerService/pom.xml
+	@mvn spotless:apply -f SearchService/pom.xml
 
 # The AWS SDK clients need a region even in unit tests; credentials are never needed.
 ci: export AWS_REGION ?= $(REGION)
