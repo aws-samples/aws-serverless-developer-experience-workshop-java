@@ -70,7 +70,7 @@ public class ContractStatusChangedHandlerFunction {
     }
 
     @Tracing
-    void saveContractStatus(String propertyId, String contractStatus, String contractId, Long contractLastModifiedOn) {
+    void saveContractStatus(String propertyId, String contractStatus, String contractId, String contractLastModifiedOn) {
         if (TABLE_NAME == null || TABLE_NAME.isEmpty()) {
             throw new RuntimeException("CONTRACT_STATUS_TABLE environment variable is not set");
         }
@@ -82,7 +82,7 @@ public class ContractStatusChangedHandlerFunction {
         Map<String, AttributeValue> expressionAttributeValues = Map.of(
             ":t", AttributeValue.fromS(contractStatus),
             ":c", AttributeValue.fromS(contractId),
-            ":m", AttributeValue.fromN(String.valueOf(contractLastModifiedOn))
+            ":m", AttributeValue.fromS(contractLastModifiedOn)
         );
 
         UpdateItemRequest updateItemRequest = UpdateItemRequest.builder()

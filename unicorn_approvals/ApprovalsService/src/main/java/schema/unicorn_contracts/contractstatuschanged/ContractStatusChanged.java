@@ -12,7 +12,7 @@ public class ContractStatusChanged implements Serializable {
   private String contractId = null;
 
   @JsonProperty("contract_last_modified_on")
-  private Long contractLastModifiedOn = null;
+  private String contractLastModifiedOn = null;
 
   @JsonProperty("contract_status")
   private String contractStatus = null;
@@ -34,17 +34,17 @@ public class ContractStatusChanged implements Serializable {
     this.contractId = contractId;
   }
 
-  public ContractStatusChanged contractLastModifiedOn(Long contractLastModifiedOn) {
+  public ContractStatusChanged contractLastModifiedOn(String contractLastModifiedOn) {
     this.contractLastModifiedOn = contractLastModifiedOn;
     return this;
   }
   
 
-  public Long getContractLastModifiedOn() {
+  public String getContractLastModifiedOn() {
     return contractLastModifiedOn;
   }
 
-  public void setContractLastModifiedOn(Long contractLastModifiedOn) {
+  public void setContractLastModifiedOn(String contractLastModifiedOn) {
     this.contractLastModifiedOn = contractLastModifiedOn;
   }
 

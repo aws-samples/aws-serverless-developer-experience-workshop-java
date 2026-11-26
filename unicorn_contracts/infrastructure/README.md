@@ -57,7 +57,7 @@ Note: This template provides the foundation for event-driven integrations for al
   - `PropertyId`: Associated property identifier
   - `ContractId`: Unique identifier for the contract
   - `ContractStatus`: Current status of the contract (DRAFT, APPROVED)
-  - `ContractLastModifiedOn`: Timestamp of the change (ISO 8601 format)
+  - `contract_last_modified_on`: Timestamp of the change, in UTC, as `yyyy-MM-ddTHH:mm:ssZ` (ISO 8601 with whole seconds), for example `2026-11-21T02:42:30Z`
 
 **Integration**:
 
@@ -74,7 +74,7 @@ Note: This template provides the foundation for event-driven integrations for al
 #### Lambda Functions
 
 - **ContractEventHandlerFunction**: Processes contract requests from SQS queue
-  - Runtime: Java 21
+  - Runtime: Java 25
   - Memory: 512MB, Timeout: 15s
   - Integrated with AWS Powertools for observability
 

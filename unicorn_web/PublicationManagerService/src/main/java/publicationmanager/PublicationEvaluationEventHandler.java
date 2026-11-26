@@ -22,6 +22,9 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.FlushMetrics;
+import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.MetricsFactory;
+import software.amazon.lambda.powertools.metrics.model.MetricUnit;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import schema.unicorn_approvals.publicationevaluationcompleted.marshaller.Marshaller;
 import schema.unicorn_approvals.publicationevaluationcompleted.AWSEvent;
@@ -98,6 +101,11 @@ public class PublicationEvaluationEventHandler {
     private void updatePropertyStatus(String evaluationResult, String propertyId) {
         logger.info("Updating property status for property ID: {}", propertyId);
         logger.info("Evaluation result: {}", evaluationResult);
+        if (!"APPROVED".equalsIgnoreCase(evaluationResult) && !"DECLINED".equalsIgnoreCase(evaluationResult)) {
+            logger.warn("Unknown evaluation result '{}', skipping DynamoDB update", evaluationResult);
+            return;
+        }
+
         try {
             String[] parts = propertyId.split("/");
             if (parts.length != 4) {
@@ -124,7 +132,8 @@ public class PublicationEvaluationEventHandler {
 
             logger.info("Updating property {} with status: {}", propertyId, evaluationResult);
             propertyTable.putItem(existingProperty).join();
-            
+            MetricsFactory.getMetricsInstance().addMetric("PropertiesApproved", 1, MetricUnit.COUNT);
+
         } catch (Exception e) {
             logger.error("Failed to update property status for ID: {}", propertyId, e);
             throw new RuntimeException("Property update failed", e);

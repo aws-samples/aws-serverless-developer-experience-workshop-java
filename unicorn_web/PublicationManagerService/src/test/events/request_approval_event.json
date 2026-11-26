@@ -1,0 +1,10 @@
+{
+  "Records": [
+    {
+      "messageId": "test-message-001",
+      "body": "{\"property_id\":\"usa/anytown/main-street/123\"}",
+      "eventSource": "aws:sqs",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

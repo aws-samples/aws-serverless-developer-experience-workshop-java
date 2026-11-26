@@ -61,10 +61,9 @@ public class Property {
         if (id != null) {
             return id;
         }
-        String partitionKey = getPk();
-        String sortKey = getSk();
-        if (partitionKey != null && sortKey != null) {
-            return (partitionKey + '/' + sortKey).replace('#', '/');
+        if (country != null && city != null && street != null && propertyNumber != null) {
+            return (country + "/" + city + "/" + street + "/" + propertyNumber)
+                    .replace(' ', '-').toLowerCase();
         }
         return null;
     }

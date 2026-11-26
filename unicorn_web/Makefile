@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test lint clean delete
+.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test lint format clean delete ci
 
 help: ## Show available commands
 	@echo "Unicorn Web Service Infrastructure"
@@ -16,8 +16,9 @@ help: ## Show available commands
 
 build: ## Build the application
 	@echo "Building Java application..."
-	@mvn clean compile -f SearchService/pom.xml
-	@mvn clean compile -f PublicationManagerService/pom.xml
+	@# Build through the parent POM so Common is built and installed for SearchService,
+	@# PublicationManagerService, and sam build to resolve.
+	@mvn clean install -DskipTests -f pom.xml
 	@sam build --template-file infrastructure/web-service/template.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
@@ -35,7 +36,6 @@ deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 deploy-service: build ## Deploy service resources (Lambda, API Gateway, DynamoDB)
 	@echo "Deploying service resources..."
 	@sam deploy \
-		--template-file infrastructure/web-service/template.yaml \
 		--stack-name $(STACK_PREFIX)-web-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -70,15 +70,25 @@ deploy: deploy-domain deploy-service deploy-schema deploy-subscriptions ## Deplo
 
 test: ## Run tests
 	@echo "Running tests..."
-	@mvn test -f SearchService/pom.xml
-	@mvn test -f PublicationManagerService/pom.xml
+	@mvn test -f pom.xml
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint infrastructure/web-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint infrastructure/web-service/template.yaml -a cfn_lint_serverless.rules
 	@cfn-lint infrastructure/domain.yaml
 	@cfn-lint infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
 	@cfn-lint infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml
+
+format: ## Format Java code (Spotless, google-java-format AOSP style)
+	@echo "Formatting Java code..."
+	@mvn spotless:apply -f Common/pom.xml
+	@mvn spotless:apply -f PublicationManagerService/pom.xml
+	@mvn spotless:apply -f SearchService/pom.xml
+
+# The AWS SDK clients need a region even in unit tests; credentials are never needed.
+ci: export AWS_REGION ?= $(REGION)
+ci: export AWS_DEFAULT_REGION ?= $(REGION)
+ci: lint build test ## Run the same checks as CI (lint, build, test); needs no AWS credentials
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
