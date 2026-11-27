@@ -10,7 +10,7 @@
   <properties>
     <maven.compiler.source>25</maven.compiler.source>
     <maven.compiler.target>25</maven.compiler.target>
-    <aws.java.sdk.version>2.59.7</aws.java.sdk.version>
+    <aws.java.sdk.version>2.59.8</aws.java.sdk.version>
     <aws.java.powertool.version>2.11.0</aws.java.powertool.version>
     <aws-lambda-java-events.version>3.16.1</aws-lambda-java-events.version>
     <mockito-core.version>5.24.0</mockito-core.version>
